@@ -78,15 +78,6 @@ class GameInteract:
         _ = index
         return 0
 
-    def is_empty_interact(self):  # type: () -> bool
-        if self.selector is not None:
-            return False
-        if self.score is not None:
-            return False
-        if self.ref is not None:
-            return False
-        return True
-
     def selector_func(self):  # type: () -> Callable[[str], str]
         if self.selector is None:
             return self._default_selector
@@ -105,20 +96,19 @@ class GameInteract:
 
 class CodeRunner:
     code_block = []  # type: list[OpcodeBase]
-    interact = GameInteract()  # type: GameInteract
     builtins = {}  # type: dict[str, Callable[..., int | bool | float | str]]
+    _interact = GameInteract()  # type: GameInteract
     _variables = {}  # type: dict[str, int | bool | float | str]
     _return = None  # type: int | bool | float | str | None
 
     def __init__(
         self,
         code_block=[],  # type: list[OpcodeBase]
-        interact=GameInteract(),  # type: GameInteract
         builtins={},  # type: dict[str, Callable[..., int | bool | float | str]]
     ):  # type: (...) -> None
         self.code_block = code_block if len(code_block) > 0 else []
-        self.interact = interact if not interact.is_empty_interact() else GameInteract()
         self._init_builtins(builtins)
+        self._interact = GameInteract()
         self._variables = {}
         self._return = None
 
@@ -191,7 +181,7 @@ class CodeRunner:
             raise Exception(
                 'The index for "ref" statement must be int; index={}'.format(index)
             )
-        value = self.interact.ref_func()(index)
+        value = self._interact.ref_func()(index)
 
         if element.element_payload[0] == TYPE_ENUM_BOOL:
             if not isinstance(value, bool):
@@ -224,9 +214,9 @@ class CodeRunner:
         if isinstance(element, ExpressionReference):
             return self._process_ref(element)
         if isinstance(element, ExpressionSelector):
-            return self.interact.selector_func()(element.element_payload)
+            return self._interact.selector_func()(element.element_payload)
         if isinstance(element, ExpressionScore):
-            return self.interact.score_func()(
+            return self._interact.score_func()(
                 element.element_payload[0],
                 element.element_payload[1],
             )
@@ -350,10 +340,7 @@ class CodeRunner:
 
         return False
 
-    def running(self):  # type: () -> int | bool | float | str
-        self._variables = {}
-        self._return = None
-
+    def _running(self):  # type: () -> int | bool | float | str
         for i in self.code_block:
             try:
                 if self._process_block(i):
@@ -368,3 +355,16 @@ class CodeRunner:
         if self._return is None:
             raise Exception("Runtime Error: No return value after running the code")
         return self._return
+
+    def running(
+        self, interact=GameInteract()
+    ):  # type: (GameInteract) -> int | bool | float | str
+        self._interact = interact
+        self._variables = {}
+        self._return = None
+        try:
+            return self._running()
+        finally:
+            self._interact = GameInteract()
+            self._variables = {}
+            self._return = None
