@@ -118,9 +118,24 @@ class CodeRunner:
     ):  # type: (...) -> None
         self.code_block = code_block if len(code_block) > 0 else []
         self.interact = interact if not interact.is_empty_interact() else GameInteract()
-        self.builtins = builtins if len(builtins) > 0 else {}
+        self._init_builtins(builtins)
         self._variables = {}
         self._return = None
+
+    def _init_builtins(
+        self, builtins
+    ):  # type: (dict[str, Callable[..., int | bool | float | str]]) -> None
+        self.builtins = {}
+        for key, value in builtins.items():
+            self.builtins[key] = value
+        if "int" not in self.builtins:
+            self.builtins["int"] = lambda x: int(x)
+        if "bool" not in self.builtins:
+            self.builtins["bool"] = lambda x: bool(x)
+        if "float" not in self.builtins:
+            self.builtins["float"] = lambda x: float(x)
+        if "str" not in self.builtins:
+            self.builtins["str"] = lambda x: str(x)
 
     def _fast_normal_panic(self, code_block, err):  # type: (OpcodeBase, str) -> None
         raise Exception(
