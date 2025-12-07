@@ -318,9 +318,7 @@ class CodeRunner:
             return not value  # type: ignore
         if isinstance(element, ExpressionCombine):
             return self._process_element(element.element_payload[0])
-        raise Exception(
-            "_process_element: Unknown element is given; element={}".format(element)
-        )
+        raise Exception("Unknown element is given; element={}".format(element))
 
     def _process_block(self, code_block):  # type: (OpcodeBase) -> bool
         if isinstance(code_block, OpcodeAssign):
