@@ -120,6 +120,10 @@ class CodeParser:
             self._fast_sentence_panic(
                 ptr1, ptr2, "Variable name should not contain quotes"
             )
+        if "." in token.token_payload:
+            self._fast_sentence_panic(
+                ptr1, ptr2, "Variable name should not contain dots"
+            )
         for i in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             if token.token_payload.startswith(i):
                 self._fast_sentence_panic(
