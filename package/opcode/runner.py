@@ -3,6 +3,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
 import json
+from .interact import GameInteract
 from .define import (
     ConditionWithCode,
     OpcodeBase,
@@ -50,54 +51,13 @@ from ..expression.compare import (
     ExpressionInverse,
 )
 
-
-class GameInteract:
-    selector = None  # type: Callable[[str], str] | None
-    score = None  # type: Callable[[str, str], int] | None
-    ref = None  # type: Callable[[int], int | bool | float | str] | None
-
-    def __init__(
-        self,
-        selector=None,  # type: Callable[[str], str] | None
-        score=None,  # type: Callable[[str, str], int] | None
-        ref=None,  # type: Callable[[int], int | bool | float | str] | None
-    ):  # type: (...) -> None
-        self.selector = selector
-        self.score = score
-        self.ref = ref
-
-    def _default_selector(self, target):  # type: (str) -> str
-        _ = target
-        return ""
-
-    def _default_score(self, target, scoreboard):  # type: (str, str) -> int
-        _, _ = target, scoreboard
-        return 0
-
-    def _default_ref(self, index):  # type: (int) -> int | bool | float | str
-        _ = index
-        return 0
-
-    def selector_func(self):  # type: () -> Callable[[str], str]
-        if self.selector is None:
-            return self._default_selector
-        return self.selector
-
-    def score_func(self):  # type: () -> Callable[[str, str], int]
-        if self.score is None:
-            return self._default_score
-        return self.score
-
-    def ref_func(self):  # type: () -> Callable[[int], int | bool | float | str]
-        if self.ref is None:
-            return self._default_ref
-        return self.ref
+EMPTY_GAME_INTERACT = GameInteract()
 
 
 class CodeRunner:
     code_block = []  # type: list[OpcodeBase]
     builtins = {}  # type: dict[str, Callable[..., int | bool | float | str]]
-    _interact = GameInteract()  # type: GameInteract
+    _interact = EMPTY_GAME_INTERACT  # type: GameInteract
     _variables = {}  # type: dict[str, int | bool | float | str]
     _return = None  # type: int | bool | float | str | None
 
@@ -108,7 +68,7 @@ class CodeRunner:
     ):  # type: (...) -> None
         self.code_block = code_block if len(code_block) > 0 else []
         self._init_builtins(builtins)
-        self._interact = GameInteract()
+        self._interact = EMPTY_GAME_INTERACT
         self._variables = {}
         self._return = None
 
@@ -357,7 +317,7 @@ class CodeRunner:
         return self._return
 
     def running(
-        self, interact=GameInteract()
+        self, interact=EMPTY_GAME_INTERACT
     ):  # type: (GameInteract) -> int | bool | float | str
         self._interact = interact
         self._variables = {}
@@ -365,6 +325,6 @@ class CodeRunner:
         try:
             return self._running()
         finally:
-            self._interact = GameInteract()
+            self._interact = EMPTY_GAME_INTERACT
             self._variables = {}
             self._return = None
