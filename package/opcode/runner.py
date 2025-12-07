@@ -196,22 +196,22 @@ class CodeRunner:
         if element.element_payload[0] == TYPE_ENUM_BOOL:
             if not isinstance(value, bool):
                 raise Exception(
-                    'Assertion failed; expected="bool", value={}'.format(value)
+                    "Assertion failed: Expect a bool but got {}".format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_INT:
             if not isinstance(value, int):
                 raise Exception(
-                    'Assertion failed; expected="int", value={}'.format(value)
+                    "Assertion failed: Expect an int but got {}".format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_FLOAT:
             if not isinstance(value, float):
                 raise Exception(
-                    'Assertion failed; expected="float", value={}'.format(value)
+                    "Assertion failed: Expect a float but got {}".format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_STR:
             if not isinstance(value, str):
                 raise Exception(
-                    'Assertion failed; expected="str", value={}'.format(value)
+                    "Assertion failed: Expect a str but got {}".format(value)
                 )
 
         return value
