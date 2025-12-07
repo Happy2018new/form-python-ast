@@ -43,13 +43,23 @@ class CodeParser:
         self.code_block = []
 
     def _format_problem_normal(self, ptr1, ptr2):  # type: (int, int) -> str
-        code = (
-            self.code[max(0, ptr1 - 30) : ptr1]
-            + ">>"
-            + self.code[ptr1:ptr2]
-            + "<<"
-            + self.code[ptr2 : ptr2 + 30]
-        )
+        code = ""
+        if True:
+            if ptr1 - 30 > 0:
+                code += "..."
+                code += self.code[ptr1 - 30 : ptr1]
+            else:
+                code += self.code[:ptr1]
+        if True:
+            code += ">>"
+            code += self.code[ptr1:ptr2]
+            code += "<<"
+        if True:
+            if ptr2 + 30 < len(self.code):
+                code += self.code[ptr2 : ptr2 + 30]
+                code += "..."
+            else:
+                code += self.code[ptr2:]
 
         blocks = code.split("\n")
         prefix = ["  " + i for i in blocks]
@@ -165,10 +175,9 @@ class CodeParser:
             sub_ptr = self.reader.pointer()
             try:
                 expression = self._parse_expression(CONTEXT_PARSE_ASSIGN)
-                self.code_block.append(
+                conditions[-1].code_block.append(
                     OpcodeExpression(
-                        expression,
-                        self._get_line_code(sub_ptr, self.reader.pointer()),
+                        expression, self._get_line_code(sub_ptr, self.reader.pointer())
                     )
                 )
                 continue

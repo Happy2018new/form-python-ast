@@ -367,8 +367,11 @@ class CodeRunner:
                 if self._process_block(i):
                     break
             except Exception as e:
-                self._fast_normal_panic(i, str(e))
-                raise Exception("unreachable")
+                if isinstance(i, OpcodeCondition):
+                    raise Exception(e)
+                else:
+                    self._fast_normal_panic(i, str(e))
+                    raise Exception("unreachable")
 
         if self._return is None:
             raise Exception("Runtime Error: No return value after running the code")
