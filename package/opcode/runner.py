@@ -252,8 +252,8 @@ class CodeRunner:
                 args = [self._process_element(i) for i in element.element_payload[1]]
                 return func(*args)
         if isinstance(element, ExpressionTimes):
-            temp = 1
-            for i in element.element_payload:
+            temp = self._process_element(element.element_payload[0])
+            for i in element.element_payload[1:]:
                 temp *= self._process_element(i)  # type: ignore
             return temp
         if isinstance(element, ExpressionDivide):
@@ -262,8 +262,8 @@ class CodeRunner:
                 temp /= self._process_element(i)  # type: ignore
             return temp
         if isinstance(element, ExpressionAdd):
-            temp = 0
-            for i in element.element_payload:
+            temp = self._process_element(element.element_payload[0])
+            for i in element.element_payload[1:]:
                 temp += self._process_element(i)  # type: ignore
             return temp
         if isinstance(element, ExpressionRemove):
