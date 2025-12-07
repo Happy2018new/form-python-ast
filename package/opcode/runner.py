@@ -189,39 +189,29 @@ class CodeRunner:
         index = self._process_element(element.element_payload[1])
         if isinstance(index, bool) or not isinstance(index, int):
             raise Exception(
-                '_process_ref: The index for "ref" statement must be int; index={}'.format(
-                    index
-                )
+                'The index for "ref" statement must be int; index={}'.format(index)
             )
         value = self.interact.ref_func()(index)
 
         if element.element_payload[0] == TYPE_ENUM_BOOL:
             if not isinstance(value, bool):
                 raise Exception(
-                    '_process_ref: Assertion failed; expected="bool", value={}'.format(
-                        value
-                    )
+                    'Assertion failed; expected="bool", value={}'.format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_INT:
             if not isinstance(value, int):
                 raise Exception(
-                    '_process_ref: Assertion failed; expected="int", value={}'.format(
-                        value
-                    )
+                    'Assertion failed; expected="int", value={}'.format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_FLOAT:
             if not isinstance(value, float):
                 raise Exception(
-                    '_process_ref: Assertion failed; expected="float", value={}'.format(
-                        value
-                    )
+                    'Assertion failed; expected="float", value={}'.format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_STR:
             if not isinstance(value, str):
                 raise Exception(
-                    '_process_ref: Assertion failed; expected="str", value={}'.format(
-                        value
-                    )
+                    'Assertion failed; expected="str", value={}'.format(value)
                 )
 
         return value
