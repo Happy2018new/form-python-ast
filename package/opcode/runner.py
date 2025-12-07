@@ -241,16 +241,16 @@ class CodeRunner:
                 element.element_payload[1],
             )
         if isinstance(element, ExpressionFunction):
-            if element.element_payload[0] not in self.builtins:
+            name = element.element_payload[0]
+            if name not in self.builtins:
                 raise Exception(
                     "Unknown function {} is called".format(
-                        json.dumps(element.element_payload[0], ensure_ascii=False)
+                        json.dumps(name, ensure_ascii=False)
                     )
                 )
-            else:
-                func = self.builtins[element.element_payload[0]]
-                args = [self._process_element(i) for i in element.element_payload[1]]
-                return func(*args)
+            func = self.builtins[name]
+            args = [self._process_element(i) for i in element.element_payload[1]]
+            return func(*args)
         if isinstance(element, ExpressionTimes):
             temp = self._process_element(element.element_payload[0])
             for i in element.element_payload[1:]:
