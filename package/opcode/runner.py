@@ -299,11 +299,15 @@ class CodeRunner:
             temp = self._process_element(element.element_payload[0])
             for i in element.element_payload[1:]:
                 temp = temp and self._process_element(i)
+                if not temp:
+                    return temp
             return temp
         if isinstance(element, ExpressionOr):
             temp = self._process_element(element.element_payload[0])
             for i in element.element_payload[1:]:
                 temp = temp or self._process_element(i)
+                if temp:
+                    return temp
             return temp
         if isinstance(element, ExpressionIn):
             left = self._process_element(element.element_payload[0])
