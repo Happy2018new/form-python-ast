@@ -360,7 +360,7 @@ class CodeRunner:
                     break
             except Exception as e:
                 if isinstance(i, OpcodeCondition):
-                    raise Exception(e)
+                    raise e
                 else:
                     self._fast_normal_panic(i, str(e))
                     raise Exception("unreachable")
