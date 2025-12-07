@@ -66,12 +66,12 @@ class GameInteract:
         self.score = score
         self.ref = ref
 
-    def _default_selector(self, selector):  # type: (str) -> str
-        _ = selector
+    def _default_selector(self, target):  # type: (str) -> str
+        _ = target
         return ""
 
-    def _default_score(self, selector, scoreboard):  # type: (str, str) -> int
-        _, _ = selector, scoreboard
+    def _default_score(self, target, scoreboard):  # type: (str, str) -> int
+        _, _ = target, scoreboard
         return 0
 
     def _default_ref(self, index):  # type: (int) -> int | bool | float | str
