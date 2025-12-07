@@ -296,13 +296,15 @@ class CodeRunner:
             right = self._process_element(element.element_payload[1])
             return left != right  # type: ignore
         if isinstance(element, ExpressionAnd):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left and right  # type: ignore
+            temp = self._process_element(element.element_payload[0])
+            for i in element.element_payload[1:]:
+                temp = temp and self._process_element(i)
+            return temp
         if isinstance(element, ExpressionOr):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left or right  # type: ignore
+            temp = self._process_element(element.element_payload[0])
+            for i in element.element_payload[1:]:
+                temp = temp or self._process_element(i)
+            return temp
         if isinstance(element, ExpressionIn):
             left = self._process_element(element.element_payload[0])
             right = self._process_element(element.element_payload[1])
