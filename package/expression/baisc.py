@@ -7,7 +7,7 @@ from .define import (
     ExpressionElement,
     CONTEXT_PARSE_ARGUMENT,
     CONTEXT_PARSE_SUB_EXPR,
-    CONTEXT_PARSE_REF_EXPR,
+    CONTEXT_PARSE_BARRIER,
     TYPE_ENUM_INT,
     TYPE_ENUM_BOOL,
     TYPE_ENUM_FLOAT,
@@ -20,7 +20,6 @@ from .define import (
 from ..token.sentence import SentenceReader
 from ..token.token import (
     TOKEN_ID_WORD,
-    TOKEN_ID_SINGLE_QUOTE,
     TOKEN_ID_LEFT_BRACKET,
     TOKEN_ID_RIGHT_BRACKET,
     TOKEN_ID_COMMA,
@@ -103,7 +102,7 @@ class ExpressionReference(ExpressionElement):
         if token.token_id != TOKEN_ID_COMMA:
             raise Exception('parse: Syntax error; expected=",", token={}'.format(token))
         self.element_payload.append(
-            ExpressionCombine().parse(reader, 1, CONTEXT_PARSE_REF_EXPR)
+            ExpressionCombine().parse(reader, 1, CONTEXT_PARSE_BARRIER)
         )
         _ = reader.unread()
 
@@ -112,38 +111,39 @@ class ExpressionReference(ExpressionElement):
 
 class ExpressionSelector(ExpressionElement):
     element_id = ELEMENT_ID_SELECTOR  # type: int
-    element_payload = ""  # type: str
+    element_payload = None  # type: ExpressionCombine | None
 
-    def __init__(self, payload=""):  # type: (str) -> None
+    def __init__(self, payload=None):  # type: (ExpressionCombine | None) -> None
         self.element_id = ELEMENT_ID_SELECTOR
         self.element_payload = payload
 
     def parse(self, reader):  # type: (SentenceReader) -> ExpressionSelector
+        from .combine import ExpressionCombine
+
         token = reader.must_read()
         if token.token_id != TOKEN_ID_COMMA:
             raise Exception('parse: Syntax error; expected=",", token={}'.format(token))
 
-        token = reader.must_read()
-        if token.token_id != TOKEN_ID_SINGLE_QUOTE:
-            raise Exception(
-                'parse: Syntax error; expected="\'", token={}'.format(token)
-            )
+        self.element_payload = ExpressionCombine().parse(
+            reader, 1, CONTEXT_PARSE_BARRIER
+        )
+        _ = reader.unread()
 
-        self.element_payload = token.token_payload
         return self
 
 
 class ExpressionScore(ExpressionElement):
     element_id = ELEMENT_ID_SCORE  # type: int
-    element_payload = []  # type: list[str]
+    element_payload = []  # type: list[ExpressionCombine]
 
-    def __init__(self, payload=[]):  # type: (list[str]) -> None
+    def __init__(self, payload=[]):  # type: (list[ExpressionCombine]) -> None
         self.element_id = ELEMENT_ID_SCORE
         self.element_payload = payload if len(payload) > 0 else []
 
     def parse(self, reader):  # type: (SentenceReader) -> ExpressionScore
-        self.element_payload = []
+        from .combine import ExpressionCombine
 
+        self.element_payload = []
         for index in range(2):
             token = reader.must_read()
             if token.token_id != TOKEN_ID_COMMA:
@@ -152,15 +152,10 @@ class ExpressionScore(ExpressionElement):
                         index, token
                     )
                 )
-            token = reader.must_read()
-            if token.token_id != TOKEN_ID_SINGLE_QUOTE:
-                raise Exception(
-                    'parse: Syntax error; expected="\'", index={}, token={}'.format(
-                        index, token
-                    )
-                )
-            self.element_payload.append(token.token_payload)
-
+            self.element_payload.append(
+                ExpressionCombine().parse(reader, 1, CONTEXT_PARSE_BARRIER)
+            )
+            _ = reader.unread()
         return self
 
 

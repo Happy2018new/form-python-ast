@@ -36,7 +36,7 @@ from .define import (
     CONTEXT_PARSE_IF,
     CONTEXT_PARSE_ARGUMENT,
     CONTEXT_PARSE_SUB_EXPR,
-    CONTEXT_PARSE_REF_EXPR,
+    CONTEXT_PARSE_BARRIER,
     ELEMENT_ID_FUNC,
     ELEMENT_ID_REF,
     ELEMENT_ID_SCORE,
@@ -251,9 +251,9 @@ class ExpressionCombine(ExpressionElement):
                 self.try_parse_barrier(reader, token)
                 continue
             if token.token_id == TOKEN_ID_RIGHT_BARRIER:
-                if context & CONTEXT_PARSE_REF_EXPR == 0:
+                if context & CONTEXT_PARSE_BARRIER == 0:
                     raise Exception(
-                        'parse_to_elements: Syntax error: "}" can only been used under "ref" barrier'
+                        'parse_to_elements: Syntax error: "}" can only been used under barrier expression'
                     )
                 break
             if token.token_id == TOKEN_ID_COLON:
@@ -298,9 +298,12 @@ class ExpressionCombine(ExpressionElement):
                     )
                 break
             if token.token_id == TOKEN_ID_COMMA:
-                if context & CONTEXT_PARSE_ARGUMENT == 0:
+                if (
+                    context & CONTEXT_PARSE_ARGUMENT == 0
+                    and context & CONTEXT_PARSE_BARRIER == 0
+                ):
                     raise Exception(
-                        'parse_to_elements: Syntax error: "," only accepted under function argument'
+                        'parse_to_elements: Syntax error: "," only accepted under function argument or barrier expression'
                     )
                 break
             if token.token_id == TOKEN_ID_EXCLAMATION:

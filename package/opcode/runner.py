@@ -166,6 +166,30 @@ class CodeRunner:
 
         return value
 
+    def _process_selector(self, element):  # type: (ExpressionSelector) -> str
+        assert element.element_payload is not None
+        value = self._process_element(element.element_payload)
+        if not isinstance(value, str):
+            raise Exception(
+                'The argument for "selector" must be str; value={}'.format(value)
+            )
+        return self._interact.selector_func()(value)
+
+    def _process_score(self, element):  # type: (ExpressionScore) -> int
+        target = self._process_element(element.element_payload[0])
+        if not isinstance(target, str):
+            raise Exception(
+                'The target argument for "score" must be str; target={}'.format(target)
+            )
+        scoreboard = self._process_element(element.element_payload[1])
+        if not isinstance(scoreboard, str):
+            raise Exception(
+                'The scoreboard argument for "score" must be str; scoreboard={}'.format(
+                    scoreboard
+                )
+            )
+        return self._interact.score_func()(target, scoreboard)
+
     def _process_element(
         self, element
     ):  # type: (ExpressionElement) -> int | bool | float | str
@@ -174,12 +198,9 @@ class CodeRunner:
         if isinstance(element, ExpressionReference):
             return self._process_ref(element)
         if isinstance(element, ExpressionSelector):
-            return self._interact.selector_func()(element.element_payload)
+            return self._process_selector(element)
         if isinstance(element, ExpressionScore):
-            return self._interact.score_func()(
-                element.element_payload[0],
-                element.element_payload[1],
-            )
+            return self._process_score(element)
         if isinstance(element, ExpressionFunction):
             name = element.element_payload[0]
             if name not in self.builtins:
