@@ -179,10 +179,10 @@ class CodeParser:
         while True:
             sub_ptr = self.reader.pointer()
             try:
-                expression = self._parse_expression(CONTEXT_PARSE_ASSIGN)
                 conditions[-1].code_block.append(
                     OpcodeExpression(
-                        expression, self._get_line_code(sub_ptr, self.reader.pointer())
+                        ExpressionCombine().parse(self.reader, 0, CONTEXT_PARSE_ASSIGN),
+                        self._get_line_code(sub_ptr, self.reader.pointer()),
                     )
                 )
                 continue
@@ -251,10 +251,9 @@ class CodeParser:
         while True:
             ptr = self.reader.pointer()
             try:
-                expression = self._parse_expression(CONTEXT_PARSE_ASSIGN)
                 self.code_block.append(
                     OpcodeExpression(
-                        expression,
+                        ExpressionCombine().parse(self.reader, 0, CONTEXT_PARSE_ASSIGN),
                         self._get_line_code(ptr, self.reader.pointer()),
                     )
                 )
