@@ -321,7 +321,9 @@ class CodeRunner:
 
         return False
 
-    def _running(self):  # type: () -> int | bool | float | str
+    def _running(
+        self, require_return
+    ):  # type: (bool) -> int | bool | float | str | None
         for i in self.code_block:
             try:
                 if self._process_block(i):
@@ -333,18 +335,18 @@ class CodeRunner:
                     self._fast_normal_panic(i, str(e))
                     raise Exception("unreachable")
 
-        if self._return is None:
+        if require_return and self._return is None:
             raise Exception("Runtime Error: No return value after running the code")
         return self._return
 
     def running(
-        self, interact=EMPTY_GAME_INTERACT
-    ):  # type: (GameInteract) -> int | bool | float | str
+        self, require_return=True, interact=EMPTY_GAME_INTERACT
+    ):  # type: (bool, GameInteract) -> int | bool | float | str | None
         self._interact = interact
         self._variables = {}
         self._return = None
         try:
-            return self._running()
+            return self._running(require_return)
         finally:
             self._interact = EMPTY_GAME_INTERACT
             self._variables = {}
