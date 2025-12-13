@@ -139,7 +139,7 @@ class CodeParser:
             self._fast_sentence_panic(
                 ptr,
                 self.reader.pointer(),
-                'You must write statements line by line or use "|" for a new line',
+                'You must write statements line by line or use "|" to represent a new line',
             )
             raise Exception("unreachable")
         if unread:
