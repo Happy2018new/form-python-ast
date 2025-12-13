@@ -166,6 +166,16 @@ class CodeParser:
             self._get_line_code(ptr, self.reader.pointer()),
         )
 
+    def _parse_fi_statement(self, ptr):  # type: (int) -> None
+        token = self.reader.read()
+        if token is not None and token.token_id != TOKEN_ID_SEPSEPARATE:
+            self._fast_sentence_panic(
+                ptr,
+                self.reader.pointer(),
+                'Key word "fi" cannot appear on the same line as other characters',
+            )
+            raise Exception("unreachable")
+
     def _parse_condition(self, ptr):  # type: (int) -> OpcodeCondition
         conditions = [
             ConditionWithCode(
@@ -233,6 +243,7 @@ class CodeParser:
             if sub_token.token_id == TOKEN_ID_SEPSEPARATE:
                 continue
             if sub_token.token_id == TOKEN_ID_KEY_WORD_FI:
+                self._parse_fi_statement(sub_ptr)
                 break
 
             self._fast_sentence_panic(
