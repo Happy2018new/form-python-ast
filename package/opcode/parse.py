@@ -131,25 +131,34 @@ class CodeParser:
                     "Variable name should not start with number ({})".format(i),
                 )
 
-    def _validate_if_statement(self, ptr):  # type: (int) -> None
+    def _validate_next_line(self, ptr, unread=False):  # type: (int, bool) -> None
         token = self.reader.read()
-        if token is not None and token.token_id != TOKEN_ID_SEPSEPARATE:
+        if token is None:
+            return
+        if token.token_id != TOKEN_ID_SEPSEPARATE:
             self._fast_sentence_panic(
                 ptr,
                 self.reader.pointer(),
-                'Key word "fi" cannot appear on the same line as other characters',
+                'You must write statements line by line or use "|" for a new line',
             )
             raise Exception("unreachable")
+        if unread:
+            self.reader.unread()
 
     def _parse_expression(
-        self, context=CONTEXT_PARSE_ASSIGN
-    ):  # type: (int) -> ExpressionCombine
+        self, context=CONTEXT_PARSE_ASSIGN, panic=True
+    ):  # type: (int, bool) -> ExpressionCombine
         ptr = self.reader.pointer()
         try:
             expression = ExpressionCombine().parse(self.reader, 0, context)
+            if context == CONTEXT_PARSE_ASSIGN:
+                self.reader.unread()
         except Exception as e:
-            self._fast_sentence_panic(ptr, self.reader.pointer(), str(e))
-            raise Exception("unreachable")
+            if panic:
+                self._fast_sentence_panic(ptr, self.reader.pointer(), str(e))
+                raise Exception("unreachable")
+            else:
+                raise e
         return expression
 
     def _parse_assign(self, ptr, token):  # type: (int, Token) -> OpcodeAssign
@@ -166,20 +175,20 @@ class CodeParser:
             raise Exception("unreachable")
 
         return OpcodeAssign(
-            (token.token_payload, self._parse_expression(CONTEXT_PARSE_ASSIGN)),
+            (token.token_payload, self._parse_expression(CONTEXT_PARSE_ASSIGN, True)),
             self._get_line_code(ptr, self.reader.pointer()),
         )
 
     def _parse_return(self, ptr):  # type: (int) -> OpcodeReturn
         return OpcodeReturn(
-            self._parse_expression(CONTEXT_PARSE_ASSIGN),
+            self._parse_expression(CONTEXT_PARSE_ASSIGN, True),
             self._get_line_code(ptr, self.reader.pointer()),
         )
 
     def _parse_condition(self, ptr):  # type: (int) -> OpcodeCondition
         conditions = [
             ConditionWithCode(
-                self._parse_expression(CONTEXT_PARSE_IF),
+                self._parse_expression(CONTEXT_PARSE_IF, True),
                 self._get_line_code(ptr, self.reader.pointer()),
                 [],
             )
@@ -190,7 +199,7 @@ class CodeParser:
             try:
                 conditions[-1].code_block.append(
                     OpcodeExpression(
-                        ExpressionCombine().parse(self.reader, 0, CONTEXT_PARSE_ASSIGN),
+                        self._parse_expression(CONTEXT_PARSE_ASSIGN, False),
                         self._get_line_code(sub_ptr, self.reader.pointer()),
                     )
                 )
@@ -209,21 +218,18 @@ class CodeParser:
             if sub_token.token_id == TOKEN_ID_WORD:
                 assign = self._parse_assign(sub_ptr, sub_token)
                 conditions[-1].code_block.append(assign)
-                continue
-            if sub_token.token_id == TOKEN_ID_KEY_WORD_IF:
+            elif sub_token.token_id == TOKEN_ID_KEY_WORD_IF:
                 condition = self._parse_condition(sub_ptr)
                 conditions[-1].code_block.append(condition)
-                continue
-            if sub_token.token_id == TOKEN_ID_KEY_WORD_ELIF:
+            elif sub_token.token_id == TOKEN_ID_KEY_WORD_ELIF:
                 conditions.append(
                     ConditionWithCode(
-                        self._parse_expression(CONTEXT_PARSE_IF),
+                        self._parse_expression(CONTEXT_PARSE_IF, True),
                         self._get_line_code(sub_ptr, self.reader.pointer()),
                         [],
                     )
                 )
-                continue
-            if sub_token.token_id == TOKEN_ID_KEY_WORD_ELSE:
+            elif sub_token.token_id == TOKEN_ID_KEY_WORD_ELSE:
                 colon = self.reader.read()
                 if colon is None or colon.token_id != TOKEN_ID_COLON:
                     self._fast_sentence_panic(
@@ -236,21 +242,21 @@ class CodeParser:
                         None, self._get_line_code(sub_ptr, self.reader.pointer()), []
                     )
                 )
-                continue
-            if sub_token.token_id == TOKEN_ID_KEY_WORD_RETURN:
+            elif sub_token.token_id == TOKEN_ID_KEY_WORD_RETURN:
                 conditions[-1].code_block.append(self._parse_return(sub_ptr))
+            elif sub_token.token_id == TOKEN_ID_SEPSEPARATE:
                 continue
-            if sub_token.token_id == TOKEN_ID_SEPSEPARATE:
-                continue
-            if sub_token.token_id == TOKEN_ID_KEY_WORD_FI:
-                self._validate_if_statement(sub_ptr)
+            elif sub_token.token_id == TOKEN_ID_KEY_WORD_FI:
+                self._validate_next_line(sub_ptr, True)
                 break
+            else:
+                self._fast_sentence_panic(
+                    sub_ptr,
+                    self.reader.pointer(),
+                    "Unexpected token; sub_token={}".format(sub_token),
+                )
 
-            self._fast_sentence_panic(
-                sub_ptr,
-                self.reader.pointer(),
-                "Unexpected token; sub_token={}".format(sub_token),
-            )
+            self._validate_next_line(sub_ptr, False)
 
         return OpcodeCondition(conditions)
 
@@ -260,7 +266,7 @@ class CodeParser:
             try:
                 self.code_block.append(
                     OpcodeExpression(
-                        ExpressionCombine().parse(self.reader, 0, CONTEXT_PARSE_ASSIGN),
+                        self._parse_expression(CONTEXT_PARSE_ASSIGN, False),
                         self._get_line_code(ptr, self.reader.pointer()),
                     )
                 )
@@ -275,20 +281,19 @@ class CodeParser:
 
             if token.token_id == TOKEN_ID_WORD:
                 self.code_block.append(self._parse_assign(ptr, token))
-                continue
-            if token.token_id == TOKEN_ID_KEY_WORD_IF:
+            elif token.token_id == TOKEN_ID_KEY_WORD_IF:
                 self.code_block.append(self._parse_condition(ptr))
-                continue
-            if token.token_id == TOKEN_ID_KEY_WORD_RETURN:
+            elif token.token_id == TOKEN_ID_KEY_WORD_RETURN:
                 self.code_block.append(self._parse_return(ptr))
+            elif token.token_id == TOKEN_ID_SEPSEPARATE:
                 continue
-            if token.token_id == TOKEN_ID_SEPSEPARATE:
-                continue
+            else:
+                self._fast_sentence_panic(
+                    ptr,
+                    self.reader.pointer(),
+                    "Unexpected token; sub_token={}".format(token),
+                )
 
-            self._fast_sentence_panic(
-                ptr,
-                self.reader.pointer(),
-                "Unexpected token; sub_token={}".format(token),
-            )
+            self._validate_next_line(ptr, False)
 
         return self
