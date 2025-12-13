@@ -201,11 +201,8 @@ class CodeParser:
                 conditions[-1].code_block.append(assign)
                 continue
             if sub_token.token_id == TOKEN_ID_KEY_WORD_IF:
-                self._fast_sentence_panic(
-                    sub_ptr,
-                    self.reader.pointer(),
-                    "Nested if statement is not allowed",
-                )
+                condition = self._parse_condition(sub_ptr)
+                conditions[-1].code_block.append(condition)
                 continue
             if sub_token.token_id == TOKEN_ID_KEY_WORD_ELIF:
                 conditions.append(

@@ -54,6 +54,10 @@ from ..expression.compare import (
 EMPTY_GAME_INTERACT = GameInteract()
 
 
+class ConditionException(Exception):
+    pass
+
+
 class CodeRunner:
     code_block = []  # type: list[OpcodeBase]
     builtins = {}  # type: dict[str, Callable[..., int | bool | float | str]]
@@ -104,7 +108,7 @@ class CodeRunner:
             prefix += "\n\n- Code -\n  {}".format(
                 condition.code_block[index].origin_line
             )
-        raise Exception(prefix)
+        raise ConditionException(prefix)
 
     def _process_literal(
         self, element
@@ -314,8 +318,11 @@ class CodeRunner:
                             if self._process_block(val):
                                 return True
                         except Exception as e:
-                            self._fast_condition_panic(i, ind, str(e))
-                            raise Exception("unreachable")
+                            if isinstance(e, ConditionException):
+                                raise e
+                            else:
+                                self._fast_condition_panic(i, ind, str(e))
+                                raise Exception("unreachable")
                     break
             return False
 
@@ -329,7 +336,7 @@ class CodeRunner:
                 if self._process_block(i):
                     break
             except Exception as e:
-                if isinstance(i, OpcodeCondition):
+                if isinstance(e, ConditionException):
                     raise e
                 else:
                     self._fast_normal_panic(i, str(e))
