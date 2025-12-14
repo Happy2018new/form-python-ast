@@ -69,20 +69,12 @@ class CodeParser:
         if mark:
             if blocks[-1].strip() == "...":
                 blocks[-1] = "..."
-        while True:
-            if len(blocks) == 0:
-                break
-            if len(blocks[0].strip()) == 0:
-                blocks = blocks[1:]
-            elif len(blocks[-1].strip()) == 0:
-                blocks = blocks[-1:]
-            else:
-                break
 
         prefix = []  # type: list[str]
         for i in blocks:
             if i.strip() != "":
                 prefix.append("  " + i)
+
         return "\n".join(prefix).rstrip()
 
     def _format_problem_sentence(self, ptr1, ptr2):  # type: (int, int) -> str
