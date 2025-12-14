@@ -221,19 +221,20 @@ class CodeParser:
         ]
 
         while True:
-            sub_ptr = self.reader.pointer()
-            sub_err = DEFAULT_EMPTY_EXCEPTION
+            expr_start_ptr = self.reader.pointer()
+            expr_end_ptr = expr_start_ptr
+            expr_parse_err = DEFAULT_EMPTY_EXCEPTION
             try:
                 conditions[-1].code_block.append(
                     OpcodeExpression(
                         self._parse_expression(CONTEXT_PARSE_ASSIGN, False, False),
-                        self._get_line_code(sub_ptr, self.reader.pointer()),
+                        self._get_line_code(expr_start_ptr, self.reader.pointer()),
                     )
                 )
                 continue
             except Exception as e:
-                sub_err = e
-                self.reader.set_pointer(sub_ptr)
+                expr_end_ptr, expr_parse_err = self.reader.pointer(), e
+                self.reader.set_pointer(expr_start_ptr)
 
             sub_ptr = self.reader.pointer()
             sub_token = self.reader.read()
@@ -278,7 +279,9 @@ class CodeParser:
                 self._validate_next_line(sub_ptr, True)
                 break
             else:
-                self._fast_sentence_panic(sub_ptr, self.reader.pointer(), str(sub_err))
+                self._fast_sentence_panic(
+                    expr_start_ptr, expr_end_ptr, str(expr_parse_err)
+                )
 
             self._validate_next_line(sub_ptr, False)
 
@@ -286,19 +289,20 @@ class CodeParser:
 
     def parse(self):  # type: () -> CodeParser
         while True:
-            ptr = self.reader.pointer()
-            err = DEFAULT_EMPTY_EXCEPTION
+            expr_start_ptr = self.reader.pointer()
+            expr_end_ptr = expr_start_ptr
+            expr_parse_err = DEFAULT_EMPTY_EXCEPTION
             try:
                 self.code_block.append(
                     OpcodeExpression(
                         self._parse_expression(CONTEXT_PARSE_ASSIGN, False, False),
-                        self._get_line_code(ptr, self.reader.pointer()),
+                        self._get_line_code(expr_start_ptr, self.reader.pointer()),
                     )
                 )
                 continue
             except Exception as e:
-                err = e
-                self.reader.set_pointer(ptr)
+                expr_end_ptr, expr_parse_err = self.reader.pointer(), e
+                self.reader.set_pointer(expr_start_ptr)
 
             ptr = self.reader.pointer()
             token = self.reader.read()
@@ -314,7 +318,9 @@ class CodeParser:
             elif token.token_id == TOKEN_ID_SEPSEPARATE:
                 continue
             else:
-                self._fast_sentence_panic(ptr, self.reader.pointer(), str(err))
+                self._fast_sentence_panic(
+                    expr_start_ptr, expr_end_ptr, str(expr_parse_err)
+                )
 
             self._validate_next_line(ptr, False)
 
