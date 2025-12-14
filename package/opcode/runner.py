@@ -24,8 +24,9 @@ from ..expression.define import (
 from ..expression.baisc import (
     ExpressionLiteral,
     ExpressionReference,
-    ExpressionScore,
     ExpressionSelector,
+    ExpressionScore,
+    ExpressionCommand,
     ExpressionFunction,
 )
 from ..expression.compute import (
@@ -175,6 +176,15 @@ class CodeRunner:
             )
         return self._interact.score_func()(target, scoreboard)
 
+    def _process_command(self, element):  # type: (ExpressionCommand) -> int
+        assert element.element_payload is not None
+        command = self._process_element(element.element_payload)
+        if not isinstance(command, str):
+            raise Exception(
+                'The argument for "command" must be str; value={}'.format(command)
+            )
+        return self._interact.command_func()(command)
+
     def _process_element(
         self, element
     ):  # type: (ExpressionElement) -> int | bool | float | str
@@ -186,6 +196,8 @@ class CodeRunner:
             return self._process_selector(element)
         if isinstance(element, ExpressionScore):
             return self._process_score(element)
+        if isinstance(element, ExpressionCommand):
+            return self._process_command(element)
         if isinstance(element, ExpressionFunction):
             name = element.element_payload[0]
             func = self._builtins.get_func(name)

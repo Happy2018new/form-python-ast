@@ -10,6 +10,7 @@ from .baisc import (
     ExpressionReference,
     ExpressionSelector,
     ExpressionScore,
+    ExpressionCommand,
     ExpressionFunction,
 )
 from .compute import (
@@ -90,6 +91,7 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_REF,
     TOKEN_ID_KEY_WORD_SELECTOR,
     TOKEN_ID_KEY_WORD_SCORE,
+    TOKEN_ID_KEY_WORD_COMMAND,
     TOKEN_ID_KEY_WORD_FUNC,
     TOKEN_ID_KEY_WORD_RETURN,
     TOKEN_ID_KEY_WORD_IF,
@@ -202,11 +204,13 @@ class ExpressionCombine(ExpressionElement):
             self.element_payload.append(ExpressionSelector().parse(reader))
         elif sub.token_id == TOKEN_ID_KEY_WORD_SCORE:
             self.element_payload.append(ExpressionScore().parse(reader))
+        elif sub.token_id == TOKEN_ID_KEY_WORD_COMMAND:
+            self.element_payload.append(ExpressionCommand().parse(reader))
         elif sub.token_id == TOKEN_ID_KEY_WORD_FUNC:
             self.element_payload.append(ExpressionFunction().parse(reader))
         else:
             raise Exception(
-                "try_parse_barrier: Syntax error: Barrier only accept ref/selector/score/func; sub={}".format(
+                "try_parse_barrier: Syntax error: Barrier only accept ref/selector/score/command/func; sub={}".format(
                     sub
                 )
             )
@@ -346,6 +350,10 @@ class ExpressionCombine(ExpressionElement):
             if token.token_id == TOKEN_ID_KEY_WORD_SCORE:
                 raise Exception(
                     'parse_to_elements: Syntax error: "score" should inside in a barrier'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_COMMAND:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "command" should inside in a barrier'
                 )
             if token.token_id == TOKEN_ID_KEY_WORD_FUNC:
                 raise Exception(

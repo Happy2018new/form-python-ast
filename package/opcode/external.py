@@ -8,16 +8,19 @@ import json
 class GameInteract:
     selector = None  # type: Callable[[str], str] | None
     score = None  # type: Callable[[str, str], int] | None
+    command = None  # type: Callable[[str], int] | None
     ref = None  # type: Callable[[int], int | bool | float | str] | None
 
     def __init__(
         self,
         selector=None,  # type: Callable[[str], str] | None
         score=None,  # type: Callable[[str, str], int] | None
+        command=None,  # type: Callable[[str], int] | None
         ref=None,  # type: Callable[[int], int | bool | float | str] | None
     ):  # type: (...) -> None
         self.selector = selector
         self.score = score
+        self.command = command
         self.ref = ref
 
     def _default_selector(self, target):  # type: (str) -> str
@@ -26,6 +29,10 @@ class GameInteract:
 
     def _default_score(self, target, scoreboard):  # type: (str, str) -> int
         _, _ = target, scoreboard
+        return 0
+
+    def _default_command(self, command):  # type: (str) -> int
+        _ = command
         return 0
 
     def _default_ref(self, index):  # type: (int) -> int | bool | float | str
@@ -41,6 +48,11 @@ class GameInteract:
         if self.score is None:
             return self._default_score
         return self.score
+
+    def command_func(self):  # type: () -> Callable[[str], int]
+        if self.command is None:
+            return self._default_command
+        return self.command
 
     def ref_func(self):  # type: () -> Callable[[int], int | bool | float | str]
         if self.ref is None:

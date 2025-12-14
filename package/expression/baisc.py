@@ -15,6 +15,7 @@ from .define import (
     ELEMENT_ID_REF,
     ELEMENT_ID_SELECTOR,
     ELEMENT_ID_SCORE,
+    ELEMENT_ID_COMMAND,
     ELEMENT_ID_FUNC,
 )
 from ..token.sentence import SentenceReader
@@ -156,6 +157,29 @@ class ExpressionScore(ExpressionElement):
                 ExpressionCombine().parse(reader, 1, CONTEXT_PARSE_BARRIER)
             )
             _ = reader.unread()
+        return self
+
+
+class ExpressionCommand(ExpressionElement):
+    element_id = ELEMENT_ID_COMMAND  # type: int
+    element_payload = None  # type: ExpressionCombine | None
+
+    def __init__(self, payload=None):  # type: (ExpressionCombine | None) -> None
+        self.element_id = ELEMENT_ID_COMMAND
+        self.element_payload = payload
+
+    def parse(self, reader):  # type: (SentenceReader) -> ExpressionCommand
+        from .combine import ExpressionCombine
+
+        token = reader.must_read()
+        if token.token_id != TOKEN_ID_COMMA:
+            raise Exception('parse: Syntax error; expected=",", token={}'.format(token))
+
+        self.element_payload = ExpressionCombine().parse(
+            reader, 1, CONTEXT_PARSE_BARRIER
+        )
+        _ = reader.unread()
+
         return self
 
 
