@@ -196,6 +196,7 @@ class CodeParser:
 
         while True:
             sub_ptr = self.reader.pointer()
+            sub_err = None
             try:
                 conditions[-1].code_block.append(
                     OpcodeExpression(
@@ -204,7 +205,8 @@ class CodeParser:
                     )
                 )
                 continue
-            except Exception:
+            except Exception as e:
+                sub_err = e
                 self.reader.set_pointer(sub_ptr)
 
             sub_ptr = self.reader.pointer()
@@ -253,7 +255,11 @@ class CodeParser:
                 self._fast_sentence_panic(
                     sub_ptr,
                     self.reader.pointer(),
-                    "Unexpected token; sub_token={}".format(sub_token),
+                    (
+                        str(sub_err)
+                        if sub_err is not None
+                        else "Unexpected token; sub_token={}".format(sub_token)
+                    ),
                 )
 
             self._validate_next_line(sub_ptr, False)
@@ -263,6 +269,7 @@ class CodeParser:
     def parse(self):  # type: () -> CodeParser
         while True:
             ptr = self.reader.pointer()
+            err = None
             try:
                 self.code_block.append(
                     OpcodeExpression(
@@ -271,7 +278,8 @@ class CodeParser:
                     )
                 )
                 continue
-            except Exception:
+            except Exception as e:
+                err = e
                 self.reader.set_pointer(ptr)
 
             ptr = self.reader.pointer()
@@ -291,7 +299,11 @@ class CodeParser:
                 self._fast_sentence_panic(
                     ptr,
                     self.reader.pointer(),
-                    "Unexpected token; sub_token={}".format(token),
+                    (
+                        str(err)
+                        if err is not None
+                        else "Unexpected token; token={}".format(token)
+                    ),
                 )
 
             self._validate_next_line(ptr, False)
