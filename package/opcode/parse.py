@@ -51,7 +51,7 @@ class CodeParser:
         if True:
             # Part that before the problem
             if ptr1 - 30 > 0:
-                code += "..."
+                code += "...\n"
                 code += self.code[ptr1 - 30 : ptr1]
                 left_overflow = True
             else:
@@ -63,19 +63,12 @@ class CodeParser:
             # Part that after the problem
             if ptr2 + 30 < len(self.code):
                 code += self.code[ptr2 : ptr2 + 30]
-                code += "..."
+                code += "\n..."
                 right_overflow = True
             else:
                 code += self.code[ptr2:]
 
         blocks = code.split("\n")
-        if left_overflow:
-            if blocks[0].strip() == "...":
-                blocks[0] = "..."
-        if right_overflow:
-            if blocks[-1].strip() == "...":
-                blocks[-1] = "..."
-
         states = [True] * len(blocks)
         start, end = 0, len(blocks) - 1
         if left_overflow and blocks[0] == "...":
