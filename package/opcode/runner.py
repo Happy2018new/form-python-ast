@@ -1,9 +1,5 @@
-TYPE_CHECKING = False
-if TYPE_CHECKING:
-    from typing import Callable
-
 import json
-from .interact import GameInteract
+from .external import GameInteract, BuiltInFunction
 from .define import (
     ConditionWithCode,
     OpcodeBase,
@@ -52,6 +48,7 @@ from ..expression.compare import (
 )
 
 EMPTY_GAME_INTERACT = GameInteract()
+EMPTY_BUILTIN_FUNCTION = BuiltInFunction()
 
 
 class ConditionException(Exception):
@@ -60,36 +57,20 @@ class ConditionException(Exception):
 
 class CodeRunner:
     code_block = []  # type: list[OpcodeBase]
-    builtins = {}  # type: dict[str, Callable[..., int | bool | float | str]]
     _interact = EMPTY_GAME_INTERACT  # type: GameInteract
+    _builtins = EMPTY_BUILTIN_FUNCTION  # type: BuiltInFunction
     _variables = {}  # type: dict[str, int | bool | float | str]
     _return = None  # type: int | bool | float | str | None
 
     def __init__(
         self,
         code_block=[],  # type: list[OpcodeBase]
-        builtins={},  # type: dict[str, Callable[..., int | bool | float | str]]
     ):  # type: (...) -> None
         self.code_block = code_block if len(code_block) > 0 else []
-        self._init_builtins(builtins)
         self._interact = EMPTY_GAME_INTERACT
+        self._builtins = EMPTY_BUILTIN_FUNCTION
         self._variables = {}
         self._return = None
-
-    def _init_builtins(
-        self, builtins
-    ):  # type: (dict[str, Callable[..., int | bool | float | str]]) -> None
-        self.builtins = {}
-        for key, value in builtins.items():
-            self.builtins[key] = value
-        if "int" not in self.builtins:
-            self.builtins["int"] = lambda x: int(x)
-        if "bool" not in self.builtins:
-            self.builtins["bool"] = lambda x: bool(x)
-        if "float" not in self.builtins:
-            self.builtins["float"] = lambda x: float(x)
-        if "str" not in self.builtins:
-            self.builtins["str"] = lambda x: str(x)
 
     def _fast_normal_panic(self, code_block, err):  # type: (OpcodeBase, str) -> None
         raise Exception(
@@ -207,13 +188,7 @@ class CodeRunner:
             return self._process_score(element)
         if isinstance(element, ExpressionFunction):
             name = element.element_payload[0]
-            if name not in self.builtins:
-                raise Exception(
-                    "Unknown function {} is called".format(
-                        json.dumps(name, ensure_ascii=False)
-                    )
-                )
-            func = self.builtins[name]
+            func = self._builtins.get_func(name)
             args = [self._process_element(i) for i in element.element_payload[1]]
             return func(*args)
         if isinstance(element, ExpressionTimes):
@@ -347,14 +322,20 @@ class CodeRunner:
         return self._return
 
     def running(
-        self, require_return=True, interact=EMPTY_GAME_INTERACT
-    ):  # type: (bool, GameInteract) -> int | bool | float | str | None
+        self,
+        require_return=True,
+        interact=EMPTY_GAME_INTERACT,
+        builtins=EMPTY_BUILTIN_FUNCTION,
+    ):  # type: (bool, GameInteract, BuiltInFunction) -> int | bool | float | str | None
         self._interact = interact
+        self._builtins = builtins
         self._variables = {}
         self._return = None
+
         try:
             return self._running(require_return)
         finally:
+            self._builtins = EMPTY_BUILTIN_FUNCTION
             self._interact = EMPTY_GAME_INTERACT
             self._variables = {}
             self._return = None
