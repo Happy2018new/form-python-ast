@@ -45,7 +45,7 @@ class CodeParser:
         self.code_block = []
 
     def _format_problem_normal(self, ptr1, ptr2):  # type: (int, int) -> str
-        code = ""
+        code, mark = "", False
         if True:
             # Part that before the problem
             if ptr1 - 30 > 0:
@@ -61,19 +61,28 @@ class CodeParser:
             if ptr2 + 30 < len(self.code):
                 code += self.code[ptr2 : ptr2 + 30]
                 code += "..."
+                mark = True
             else:
                 code += self.code[ptr2:]
 
         blocks = code.split("\n")
-        prefix = ["  " + i for i in blocks]
+        if mark:
+            if blocks[-1].strip() == "...":
+                blocks[-1] = "..."
         while True:
-            if len(prefix) == 0:
+            if len(blocks) == 0:
                 break
-            if len(prefix[0].strip()) == 0:
-                prefix = prefix[1:]
+            if len(blocks[0].strip()) == 0:
+                blocks = blocks[1:]
+            elif len(blocks[-1].strip()) == 0:
+                blocks = blocks[-1:]
             else:
                 break
 
+        prefix = []  # type: list[str]
+        for i in blocks:
+            if i.strip() != "":
+                prefix.append("  " + i)
         return "\n".join(prefix).rstrip()
 
     def _format_problem_sentence(self, ptr1, ptr2):  # type: (int, int) -> str
