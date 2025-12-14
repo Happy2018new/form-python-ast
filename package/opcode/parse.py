@@ -45,12 +45,15 @@ class CodeParser:
         self.code_block = []
 
     def _format_problem_normal(self, ptr1, ptr2):  # type: (int, int) -> str
-        code, mark = "", False
+        code = ""
+        left_overflow = False
+        right_overflow = False
         if True:
             # Part that before the problem
             if ptr1 - 30 > 0:
                 code += "..."
                 code += self.code[ptr1 - 30 : ptr1]
+                left_overflow = True
             else:
                 code += self.code[:ptr1]
             # Problem part
@@ -61,20 +64,36 @@ class CodeParser:
             if ptr2 + 30 < len(self.code):
                 code += self.code[ptr2 : ptr2 + 30]
                 code += "..."
-                mark = True
+                right_overflow = True
             else:
                 code += self.code[ptr2:]
 
         blocks = code.split("\n")
-        if mark:
+        if left_overflow:
+            if blocks[0].strip() == "...":
+                blocks[0] = "..."
+        if right_overflow:
             if blocks[-1].strip() == "...":
                 blocks[-1] = "..."
 
-        prefix = []  # type: list[str]
-        for i in blocks:
-            if i.strip() != "":
-                prefix.append("  " + i)
+        states = [True] * len(blocks)
+        start, end = 0, len(blocks) - 1
+        if left_overflow and blocks[0] == "...":
+            start += 1
+        if right_overflow and blocks[-1] == "...":
+            end -= 1
+        for i in range(start, end + 1):
+            if blocks[i].strip() == "":
+                states[i] = False
+            else:
+                break
+        for i in range(end, start - 1, -1):
+            if blocks[i].strip() == "":
+                states[i] = False
+            else:
+                break
 
+        prefix = ["  " + value for index, value in enumerate(blocks) if states[index]]
         return "\n".join(prefix).rstrip()
 
     def _format_problem_sentence(self, ptr1, ptr2):  # type: (int, int) -> str
