@@ -13,15 +13,6 @@ from .define import (
 )
 
 
-class ExpressionNormal(ExpressionElement):
-    element_id = 0
-    element_payload = None
-
-    def __init__(self, element_id):  # type: (int) -> None
-        self.element_id = element_id
-        self.element_payload = None
-
-
 class ExpressionOperator(ExpressionElement):
     element_id = 0  # type: int
     element_payload = []  # type: list[ExpressionElement]

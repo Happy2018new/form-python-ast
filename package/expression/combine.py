@@ -4,6 +4,7 @@ if TYPE_CHECKING:
 
 import json
 from .baisc import (
+    ExpressionNormal,
     ExpressionLiteral,
     ExpressionReference,
     ExpressionSelector,
@@ -18,7 +19,6 @@ from .compute import (
     ExpressionRemove,
 )
 from .compare import (
-    ExpressionNormal,
     ExpressionOperator,
     ExpressionGreaterThan,
     ExpressionLessThan,

@@ -31,6 +31,15 @@ from ..token.token import (
 )
 
 
+class ExpressionNormal(ExpressionElement):
+    element_id = 0
+    element_payload = None
+
+    def __init__(self, element_id):  # type: (int) -> None
+        self.element_id = element_id
+        self.element_payload = None
+
+
 class ExpressionLiteral(ExpressionElement):
     element_id = 0  # type: int
     element_payload = 0  # type: int | bool | float | str | ExpressionCombine
