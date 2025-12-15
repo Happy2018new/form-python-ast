@@ -1,6 +1,5 @@
 from .define import (
     ExpressionElement,
-    ExpressionOperator,
     ELEMENT_ID_EQUAL,
     ELEMENT_ID_LESS_THAN,
     ELEMENT_ID_GREATER_THAN,
@@ -12,6 +11,24 @@ from .define import (
     ELEMENT_ID_IN,
     ELEMENT_ID_INVERSE,
 )
+
+
+class ExpressionNormal(ExpressionElement):
+    element_id = 0
+    element_payload = None
+
+    def __init__(self, element_id):  # type: (int) -> None
+        self.element_id = element_id
+        self.element_payload = None
+
+
+class ExpressionOperator(ExpressionElement):
+    element_id = 0  # type: int
+    element_payload = []  # type: list[ExpressionElement]
+
+    def __init__(self, element_payload=[]):  # type: (list[ExpressionElement]) -> None
+        self.element_id = 0
+        self.element_payload = element_payload if len(element_payload) > 0 else []
 
 
 class ExpressionGreaterThan(ExpressionOperator):

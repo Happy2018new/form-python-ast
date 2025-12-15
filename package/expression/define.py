@@ -90,12 +90,3 @@ class ExpressionElement:
             else:
                 prefix += ", payload={}".format(self.element_payload)
         return prefix + ")"
-
-
-class ExpressionOperator(ExpressionElement):
-    element_id = 0  # type: int
-    element_payload = []  # type: list[ExpressionElement]
-
-    def __init__(self, element_payload=[]):  # type: (list[ExpressionElement]) -> None
-        self.element_id = 0
-        self.element_payload = element_payload if len(element_payload) > 0 else []

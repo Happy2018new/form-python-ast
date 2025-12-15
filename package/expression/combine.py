@@ -4,8 +4,6 @@ if TYPE_CHECKING:
 
 import json
 from .baisc import (
-    ExpressionElement,
-    ExpressionNormal,
     ExpressionLiteral,
     ExpressionReference,
     ExpressionSelector,
@@ -20,6 +18,8 @@ from .compute import (
     ExpressionRemove,
 )
 from .compare import (
+    ExpressionNormal,
+    ExpressionOperator,
     ExpressionGreaterThan,
     ExpressionLessThan,
     ExpressionGreaterEqual,
@@ -32,7 +32,7 @@ from .compare import (
     ExpressionInverse,
 )
 from .define import (
-    ExpressionOperator,
+    ExpressionElement,
     CONTEXT_PARSE_ASSIGN,
     CONTEXT_PARSE_IF,
     CONTEXT_PARSE_ARGUMENT,

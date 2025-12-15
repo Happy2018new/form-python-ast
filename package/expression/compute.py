@@ -1,11 +1,11 @@
 from .define import (
     ExpressionElement,
-    ExpressionOperator,
     ELEMENT_ID_ADD,
     ELEMENT_ID_REMOVE,
     ELEMENT_ID_TIMES,
     ELEMENT_ID_DIVIDE,
 )
+from .compare import ExpressionOperator
 
 
 class ExpressionTimes(ExpressionOperator):
