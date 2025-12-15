@@ -3,34 +3,6 @@ if TYPE_CHECKING:
     from typing import Any
 
 import json
-from .baisc import (
-    ExpressionNormal,
-    ExpressionLiteral,
-    ExpressionReference,
-    ExpressionSelector,
-    ExpressionScore,
-    ExpressionCommand,
-    ExpressionFunction,
-)
-from .compute import (
-    ExpressionTimes,
-    ExpressionDivide,
-    ExpressionAdd,
-    ExpressionRemove,
-)
-from .compare import (
-    ExpressionOperator,
-    ExpressionGreaterThan,
-    ExpressionLessThan,
-    ExpressionGreaterEqual,
-    ExpressionLessEqual,
-    ExpressionEqual,
-    ExpressionNotEqual,
-    ExpressionAnd,
-    ExpressionOr,
-    ExpressionIn,
-    ExpressionInverse,
-)
 from .define import (
     ExpressionElement,
     CONTEXT_PARSE_ASSIGN,
@@ -62,6 +34,34 @@ from .define import (
     ELEMENT_ID_OR,
     ELEMENT_ID_IN,
     ELEMENT_ID_INVERSE,
+)
+from .baisc import (
+    ExpressionNormal,
+    ExpressionLiteral,
+    ExpressionReference,
+    ExpressionSelector,
+    ExpressionScore,
+    ExpressionCommand,
+    ExpressionFunction,
+)
+from .compute import (
+    ExpressionTimes,
+    ExpressionDivide,
+    ExpressionAdd,
+    ExpressionRemove,
+)
+from .compare import (
+    ExpressionOperator,
+    ExpressionGreaterThan,
+    ExpressionLessThan,
+    ExpressionGreaterEqual,
+    ExpressionLessEqual,
+    ExpressionEqual,
+    ExpressionNotEqual,
+    ExpressionAnd,
+    ExpressionOr,
+    ExpressionIn,
+    ExpressionInverse,
 )
 from ..reader.any_reader import AnyReader
 from ..token.sentence import SentenceReader
