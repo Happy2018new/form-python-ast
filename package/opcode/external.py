@@ -88,13 +88,13 @@ class BuiltInFunction:
         self, func_name
     ):  # type: (str) -> Callable[..., int | bool | float | str]
         if func_name == "int":
-            return BuiltInFunction()._int
+            return self._int
         if func_name == "bool":
-            return BuiltInFunction()._bool
+            return self._bool
         if func_name == "float":
-            return BuiltInFunction()._float
+            return self._float
         if func_name == "str":
-            return BuiltInFunction()._str
+            return self._str
 
         if func_name in self.static:
             return self.static[func_name]
