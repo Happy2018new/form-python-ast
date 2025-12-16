@@ -381,7 +381,7 @@ class ExpressionCommand(ExpressionElement):
 
 class ExpressionFunction(ExpressionElement):
     """
-    ExpressionFunction 指示函数表达式元素
+    ExpressionFunction 指示函数表达式元素。
     它保存了函数名和参数列表，用于函数调用
     """
 
@@ -405,8 +405,8 @@ class ExpressionFunction(ExpressionElement):
         以及所有需要传入给该函数的参数。
 
         实际上，解析得到的参数列表是由多个复杂表达式组成的列表。
-        因此，该函数表达式元素的负载具有两个元素。
-        第一个元素即为函数名，第二个元素便是参数列表。
+        因此，该函数表达式元素的负载具有两个元素，
+        而第一个元素即为函数名，第二个元素便是参数列表
 
         Args:
             reader (SentenceReader): 底层 Token 流
