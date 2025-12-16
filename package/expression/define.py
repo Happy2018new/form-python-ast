@@ -70,14 +70,27 @@ ELEMENT_ID_TO_NAME = {
 
 
 class ExpressionElement:
+    """ExpressionElement 是任何表达式元素的基本实现"""
+
     element_id = 0  # type: int
     element_payload = None  # type: Any | None
 
     def __init__(self, element_id, element_payload):  # type: (int, Any) -> None
+        """初始化并返回一个新的基本表达式元素
+
+        Args:
+            element_id (int): 表达式元素的 ID
+            element_payload (Any): 表达式元素的负载
+        """
         self.element_id = element_id
         self.element_payload = element_payload
 
     def __repr__(self):  # type: () -> str
+        """返回表达式元素的字符串表示
+
+        Returns:
+            str: 该表达式元素的字符串表示
+        """
         prefix = "ExpressionElement(id={}, name={}".format(
             self.element_id,
             json.dumps(ELEMENT_ID_TO_NAME[self.element_id], ensure_ascii=False),
