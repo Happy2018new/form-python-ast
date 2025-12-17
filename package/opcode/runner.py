@@ -2,9 +2,14 @@ import json
 from .external import GameInteract, BuiltInFunction
 from .define import (
     ConditionWithCode,
+    ForLoopCodeBlock,
     OpcodeBase,
     OpcodeAssign,
     OpcodeCondition,
+    OpcodeForLoop,
+    OpcodeContinue,
+    OpcodeBreak,
+    OpcodeDelete,
     OpcodeExpression,
     OpcodeReturn,
 )
@@ -48,6 +53,11 @@ from ..expression.compare import (
     ExpressionInverse,
 )
 
+STATES_KEEP_RUNNING = 0
+STATES_LOOP_CONTINUE = 1
+STATES_LOOP_BREAK = 2
+STATES_CODE_RETURN = 3
+
 EMPTY_GAME_INTERACT = GameInteract()
 EMPTY_BUILTIN_FUNCTION = BuiltInFunction()
 
@@ -89,6 +99,18 @@ class CodeRunner:
         if index != -1:
             prefix += "\n\n- Code -\n  {}".format(
                 condition.code_block[index].origin_line
+            )
+        raise ConditionException(prefix)
+
+    def _fast_for_loop_panic(
+        self, for_loop, index=-1, err=""
+    ):  # type: (ForLoopCodeBlock, int, str) -> None
+        prefix = "Runtime Error in for loop.\n\n- Error -\n  {}\n\n- For Loop -\n  {}".format(
+            err, for_loop.state_line
+        )
+        if index != -1:
+            prefix += "\n\n- Code -\n  {}".format(
+                for_loop.code_block[index].origin_line
             )
         raise ConditionException(prefix)
 
@@ -272,18 +294,27 @@ class CodeRunner:
             return self._process_element(element.element_payload[0])
         raise Exception("Unknown element is given; element={}".format(element))
 
-    def _process_block(self, code_block):  # type: (OpcodeBase) -> bool
+    def _process_block(self, code_block):  # type: (OpcodeBase) -> int
         if isinstance(code_block, OpcodeAssign):
             name = code_block.opcode_payload[0]
             value = self._process_element(code_block.opcode_payload[1])
             self._variables[name] = value
-            return False
+            return STATES_KEEP_RUNNING
+        if isinstance(code_block, OpcodeContinue):
+            return STATES_LOOP_CONTINUE
+        if isinstance(code_block, OpcodeBreak):
+            return STATES_LOOP_BREAK
         if isinstance(code_block, OpcodeExpression):
             self._return = self._process_element(code_block.opcode_payload)
-            return False
+            return STATES_KEEP_RUNNING
+        if isinstance(code_block, OpcodeDelete):
+            name = code_block.opcode_payload
+            if name in self._variables:
+                del self._variables[name]
+            return STATES_KEEP_RUNNING
         if isinstance(code_block, OpcodeReturn):
             self._return = self._process_element(code_block.opcode_payload)
-            return True
+            return STATES_CODE_RETURN
 
         if isinstance(code_block, OpcodeCondition):
             for i in code_block.opcode_payload:
@@ -302,8 +333,9 @@ class CodeRunner:
                 if cond:
                     for ind, val in enumerate(i.code_block):
                         try:
-                            if self._process_block(val):
-                                return True
+                            command = self._process_block(val)
+                            if command != STATES_KEEP_RUNNING:
+                                return command
                         except Exception as e:
                             if isinstance(e, ConditionException):
                                 raise e
@@ -311,17 +343,54 @@ class CodeRunner:
                                 self._fast_condition_panic(i, ind, str(e))
                                 raise Exception("unreachable")
                     break
-            return False
+            return STATES_KEEP_RUNNING
 
-        return False
+        if isinstance(code_block, OpcodeForLoop):
+            assert code_block.opcode_payload is not None
+            for_loop = code_block.opcode_payload
+            variable = for_loop.variable
+
+            try:
+                repeat_times = self._process_element(for_loop.repeat_times)
+            except Exception as e:
+                self._fast_for_loop_panic(for_loop, -1, str(e))
+                raise Exception("unreachable")
+            if not isinstance(repeat_times, int) or isinstance(repeat_times, bool):
+                self._fast_for_loop_panic(
+                    for_loop, -1, "The repeat times of for loop must be int"
+                )
+                raise Exception("unreachable")
+
+            for i in range(repeat_times):
+                self._variables[variable] = i
+                for ind, val in enumerate(for_loop.code_block):
+                    try:
+                        command = self._process_block(val)
+                        if command == STATES_LOOP_CONTINUE:
+                            break
+                        if command == STATES_LOOP_BREAK:
+                            return STATES_KEEP_RUNNING
+                        if command == STATES_CODE_RETURN:
+                            return STATES_CODE_RETURN
+                    except Exception as e:
+                        self._fast_for_loop_panic(for_loop, ind, str(e))
+                        raise Exception("unreachable")
+            return STATES_KEEP_RUNNING
+
+        return STATES_KEEP_RUNNING
 
     def _running(
         self, require_return
     ):  # type: (bool) -> int | bool | float | str | None
         for i in self.code_block:
             try:
-                if self._process_block(i):
+                command = self._process_block(i)
+                if command == STATES_CODE_RETURN:
                     break
+                if command != STATES_KEEP_RUNNING:
+                    raise Exception(
+                        "Continue and break statement only accepted under for loop code block"
+                    )
             except Exception as e:
                 if isinstance(e, ConditionException):
                     raise e

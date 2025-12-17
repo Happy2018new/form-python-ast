@@ -7,6 +7,7 @@ from .define import (
     ExpressionElement,
     CONTEXT_PARSE_ASSIGN,
     CONTEXT_PARSE_IF,
+    CONTEXT_PARSE_FOR,
     CONTEXT_PARSE_ARGUMENT,
     CONTEXT_PARSE_SUB_EXPR,
     CONTEXT_PARSE_BARRIER,
@@ -98,6 +99,11 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_ELSE,
     TOKEN_ID_KEY_WORD_ELIF,
     TOKEN_ID_KEY_WORD_FI,
+    TOKEN_ID_KEY_WORD_FOR,
+    TOKEN_ID_KEY_WORD_CONTINUE,
+    TOKEN_ID_KEY_WORD_BREAK,
+    TOKEN_ID_KEY_WORD_ROF,
+    TOKEN_ID_KEY_WORD_DEL,
     TOKEN_ID_KEY_WORD_AND,
     TOKEN_ID_KEY_WORD_OR,
     TOKEN_ID_KEY_WORD_NOT,
@@ -430,9 +436,9 @@ class ExpressionCombine(ExpressionElement):
                     )
                 break
             if token.token_id == TOKEN_ID_COLON:
-                if context & CONTEXT_PARSE_IF == 0:
+                if context & CONTEXT_PARSE_IF == 0 and context & CONTEXT_PARSE_FOR == 0:
                     raise Exception(
-                        'parse_to_elements: Syntax error: ":" can only been used under "if" condition'
+                        'parse_to_elements: Syntax error: ":" can only been used under if condition or for loop'
                     )
                 break
             if token.token_id == TOKEN_ID_PLUS:
@@ -547,6 +553,26 @@ class ExpressionCombine(ExpressionElement):
             if token.token_id == TOKEN_ID_KEY_WORD_FI:
                 raise Exception(
                     'parse_to_elements: Syntax error: "fi" cannot be used in expression'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_FOR:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "for" cannot be used in expression'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_CONTINUE:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "continue" cannot be used in expression'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_BREAK:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "break" cannot be used in expression'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_ROF:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "rof" cannot be used in expression'
+                )
+            if token.token_id == TOKEN_ID_KEY_WORD_DEL:
+                raise Exception(
+                    'parse_to_elements: Syntax error: "del" cannot be used in expression'
                 )
             if token.token_id == TOKEN_ID_KEY_WORD_AND:
                 self.element_payload.append(ExpressionNormal(ELEMENT_ID_AND))
