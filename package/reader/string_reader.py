@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 class StringReader:
     _buffer = ""
     _pointer = 0

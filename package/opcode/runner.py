@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 from .external import GameInteract, BuiltInFunction
 from .define import (

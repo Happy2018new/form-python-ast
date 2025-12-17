@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any, Callable

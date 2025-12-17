@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .define import (
     ExpressionElement,
     ELEMENT_ID_ADD,

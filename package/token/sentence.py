@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from ..reader.any_reader import AnyReader
 from ..reader.string_reader import StringReader
 from .token import (
@@ -13,7 +15,7 @@ class Sentence:
     reader = StringReader("")  # type: StringReader
     tokens = []  # type: list[Token]
 
-    def __init__(self, reader) -> None:  # type: (StringReader) -> None
+    def __init__(self, reader):  # type: (StringReader) -> None
         self.reader = reader
         self.tokens = []
 

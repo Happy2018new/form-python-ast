@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 
 TOKEN_ID_WORD = 0
