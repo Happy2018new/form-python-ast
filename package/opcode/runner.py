@@ -9,7 +9,6 @@ from .define import (
     OpcodeForLoop,
     OpcodeContinue,
     OpcodeBreak,
-    OpcodeDelete,
     OpcodeExpression,
     OpcodeReturn,
 )
@@ -306,17 +305,6 @@ class CodeRunner:
             return STATES_LOOP_BREAK
         if isinstance(code_block, OpcodeExpression):
             self._return = self._process_element(code_block.opcode_payload)
-            return STATES_KEEP_RUNNING
-        if isinstance(code_block, OpcodeDelete):
-            name = code_block.opcode_payload
-            if name in self._variables:
-                del self._variables[name]
-            else:
-                raise Exception(
-                    "Variable {} not defined and cannot be deleted".format(
-                        json.dumps(name, ensure_ascii=False)
-                    )
-                )
             return STATES_KEEP_RUNNING
         if isinstance(code_block, OpcodeReturn):
             self._return = self._process_element(code_block.opcode_payload)

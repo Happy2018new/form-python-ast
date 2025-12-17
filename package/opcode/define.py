@@ -11,8 +11,7 @@ OPCODE_FOR_LOOP = 2
 OPCODE_CONTINUE = 3
 OPCODE_BREAK = 4
 OPCODE_EXPRESSION = 5
-OPCODE_DELETE = 6
-OPCODE_RETURN = 7
+OPCODE_RETURN = 6
 
 OPCODE_ID_TO_NAME = {
     OPCODE_ASSIGN: "assign",
@@ -21,7 +20,6 @@ OPCODE_ID_TO_NAME = {
     OPCODE_CONTINUE: "continue",
     OPCODE_BREAK: "break",
     OPCODE_EXPRESSION: "expression",
-    OPCODE_DELETE: "delete",
     OPCODE_RETURN: "return",
 }
 
@@ -247,15 +245,6 @@ class OpcodeExpression(OpcodeBase):
                 目前只用于调试和错误提示
         """
         OpcodeBase.__init__(self, OPCODE_EXPRESSION, payload, line)
-
-
-class OpcodeDelete(OpcodeBase):
-    opcode_id = OPCODE_DELETE  # type: int
-    opcode_payload = ""  # type: str
-    origin_line = ""  # type: str
-
-    def __init__(self, payload, line):  # type: (str, str) -> None
-        OpcodeBase.__init__(self, OPCODE_DELETE, payload, line)
 
 
 class OpcodeReturn(OpcodeBase):

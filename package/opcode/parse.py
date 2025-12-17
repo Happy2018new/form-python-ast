@@ -8,7 +8,6 @@ from .define import (
     OpcodeContinue,
     OpcodeBreak,
     OpcodeExpression,
-    OpcodeDelete,
     OpcodeReturn,
 )
 from ..expression.combine import ExpressionCombine
@@ -35,7 +34,6 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_CONTINUE,
     TOKEN_ID_KEY_WORD_BREAK,
     TOKEN_ID_KEY_WORD_ROF,
-    TOKEN_ID_KEY_WORD_DEL,
 )
 
 DEFAULT_EMPTY_EXCEPTION = Exception()
@@ -230,12 +228,6 @@ class CodeParser:
             self._get_line_code(ptr, self.reader.pointer()),
         )
 
-    def _parse_delete(self, ptr):  # type: (int) -> OpcodeDelete
-        return OpcodeDelete(
-            self._parse_variable(ptr),
-            self._get_line_code(ptr, self.reader.pointer()),
-        )
-
     def _parse_return(self, ptr):  # type: (int) -> OpcodeReturn
         return OpcodeReturn(
             self._parse_expression(CONTEXT_PARSE_ASSIGN, True, True),
@@ -271,8 +263,6 @@ class CodeParser:
             return self._parse_condition(ptr), None
         if token.token_id == TOKEN_ID_KEY_WORD_FOR:
             return self._parse_for_loop(ptr), None
-        if token.token_id == TOKEN_ID_KEY_WORD_DEL:
-            return self._parse_delete(ptr), None
         if token.token_id == TOKEN_ID_KEY_WORD_RETURN:
             return self._parse_return(ptr), None
         if token.token_id == TOKEN_ID_KEY_WORD_CONTINUE:

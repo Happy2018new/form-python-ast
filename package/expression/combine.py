@@ -103,7 +103,6 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_CONTINUE,
     TOKEN_ID_KEY_WORD_BREAK,
     TOKEN_ID_KEY_WORD_ROF,
-    TOKEN_ID_KEY_WORD_DEL,
     TOKEN_ID_KEY_WORD_AND,
     TOKEN_ID_KEY_WORD_OR,
     TOKEN_ID_KEY_WORD_NOT,
@@ -569,10 +568,6 @@ class ExpressionCombine(ExpressionElement):
             if token.token_id == TOKEN_ID_KEY_WORD_ROF:
                 raise Exception(
                     'parse_to_elements: Syntax error: "rof" cannot be used in expression'
-                )
-            if token.token_id == TOKEN_ID_KEY_WORD_DEL:
-                raise Exception(
-                    'parse_to_elements: Syntax error: "del" cannot be used in expression'
                 )
             if token.token_id == TOKEN_ID_KEY_WORD_AND:
                 self.element_payload.append(ExpressionNormal(ELEMENT_ID_AND))
