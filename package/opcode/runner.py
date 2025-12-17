@@ -62,7 +62,7 @@ EMPTY_GAME_INTERACT = GameInteract()
 EMPTY_BUILTIN_FUNCTION = BuiltInFunction()
 
 
-class ConditionException(Exception):
+class CodeBlockException(Exception):
     pass
 
 
@@ -93,26 +93,26 @@ class CodeRunner:
     def _fast_condition_panic(
         self, condition, index=-1, err=""
     ):  # type: (ConditionWithCode, int, str) -> None
-        prefix = "Runtime Error in condition.\n\n- Error -\n  {}\n\n- Condition -\n  {}".format(
+        prefix = "Runtime Error in Condition.\n\n- Error -\n  {}\n\n- Condition -\n  {}".format(
             err, condition.state_line
         )
         if index != -1:
             prefix += "\n\n- Code -\n  {}".format(
                 condition.code_block[index].origin_line
             )
-        raise ConditionException(prefix)
+        raise CodeBlockException(prefix)
 
     def _fast_for_loop_panic(
         self, for_loop, index=-1, err=""
     ):  # type: (ForLoopCodeBlock, int, str) -> None
-        prefix = "Runtime Error in for loop.\n\n- Error -\n  {}\n\n- For Loop -\n  {}".format(
+        prefix = "Runtime Error in For Loop.\n\n- Error -\n  {}\n\n- For Loop -\n  {}".format(
             err, for_loop.state_line
         )
         if index != -1:
             prefix += "\n\n- Code -\n  {}".format(
                 for_loop.code_block[index].origin_line
             )
-        raise ConditionException(prefix)
+        raise CodeBlockException(prefix)
 
     def _process_literal(
         self, element
@@ -337,7 +337,7 @@ class CodeRunner:
                             if command != STATES_KEEP_RUNNING:
                                 return command
                         except Exception as e:
-                            if isinstance(e, ConditionException):
+                            if isinstance(e, CodeBlockException):
                                 raise e
                             else:
                                 self._fast_condition_panic(i, ind, str(e))
@@ -373,8 +373,11 @@ class CodeRunner:
                         if command == STATES_CODE_RETURN:
                             return STATES_CODE_RETURN
                     except Exception as e:
-                        self._fast_for_loop_panic(for_loop, ind, str(e))
-                        raise Exception("unreachable")
+                        if isinstance(e, CodeBlockException):
+                            raise e
+                        else:
+                            self._fast_for_loop_panic(for_loop, ind, str(e))
+                            raise Exception("unreachable")
             return STATES_KEEP_RUNNING
 
         return STATES_KEEP_RUNNING
@@ -392,7 +395,7 @@ class CodeRunner:
                         "Continue and break statement only accepted under for loop code block"
                     )
             except Exception as e:
-                if isinstance(e, ConditionException):
+                if isinstance(e, CodeBlockException):
                     raise e
                 else:
                     self._fast_normal_panic(i, str(e))
