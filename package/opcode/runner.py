@@ -311,6 +311,12 @@ class CodeRunner:
             name = code_block.opcode_payload
             if name in self._variables:
                 del self._variables[name]
+            else:
+                raise Exception(
+                    "Variable {} not defined and cannot be deleted".format(
+                        json.dumps(name, ensure_ascii=False)
+                    )
+                )
             return STATES_KEEP_RUNNING
         if isinstance(code_block, OpcodeReturn):
             self._return = self._process_element(code_block.opcode_payload)
