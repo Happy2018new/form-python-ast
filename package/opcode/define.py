@@ -138,9 +138,7 @@ class OpcodeBase:
             self.opcode_id, OPCODE_ID_TO_NAME[self.opcode_id]
         )
         if self.opcode_payload is not None:
-            prefix += ", payload={}".format(
-                json.dumps(str(self.opcode_payload), ensure_ascii=False)
-            )
+            prefix += ", payload={}".format(self.opcode_payload)
         return prefix + ", line={})".format(
             json.dumps(self.origin_line, ensure_ascii=False)
         )
