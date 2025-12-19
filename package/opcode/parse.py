@@ -38,6 +38,7 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_ROF,
 )
 
+ORD_ZERO, ORD_NINE = ord("0"), ord("9")
 DEFAULT_EMPTY_EXCEPTION = Exception()
 
 
@@ -163,14 +164,15 @@ class CodeParser:
                 ptr1, ptr2, "Variable name should not contain dots"
             )
             raise Exception("unreachable")
-        for i in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-            if token.token_payload.startswith(i):
-                self._fast_sentence_panic(
-                    ptr1,
-                    ptr2,
-                    "Variable name should not start with number ({})".format(i),
-                )
-                raise Exception("unreachable")
+        if ORD_ZERO <= ord(token.token_payload[0]) <= ORD_NINE:
+            self._fast_sentence_panic(
+                ptr1,
+                ptr2,
+                "Variable name should not start with number ({})".format(
+                    token.token_payload[0]
+                ),
+            )
+            raise Exception("unreachable")
 
     def _validate_next_line(self, ptr, unread=False):  # type: (int, bool) -> None
         token = self.reader.read()
