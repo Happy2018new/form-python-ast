@@ -157,10 +157,12 @@ class CodeParser:
             self._fast_sentence_panic(
                 ptr1, ptr2, "Variable name should not contain quotes"
             )
+            raise Exception("unreachable")
         if "." in token.token_payload:
             self._fast_sentence_panic(
                 ptr1, ptr2, "Variable name should not contain dots"
             )
+            raise Exception("unreachable")
         for i in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             if token.token_payload.startswith(i):
                 self._fast_sentence_panic(
@@ -168,6 +170,7 @@ class CodeParser:
                     ptr2,
                     "Variable name should not start with number ({})".format(i),
                 )
+                raise Exception("unreachable")
 
     def _validate_next_line(self, ptr, unread=False):  # type: (int, bool) -> None
         token = self.reader.read()
@@ -325,6 +328,7 @@ class CodeParser:
                 continue
             else:
                 self._fast_sentence_panic(further[1], further[2], str(further[3]))
+                raise Exception("unreachable")
 
             self._validate_next_line(sub_ptr, False)
 
@@ -364,8 +368,7 @@ class CodeParser:
                 continue
             else:
                 self._fast_sentence_panic(further[1], further[2], str(further[3]))
-
-            self._validate_next_line(sub_ptr, False)
+                raise Exception("unreachable")
 
         return OpcodeForLoop(
             ForLoopCodeBlock(
@@ -391,5 +394,6 @@ class CodeParser:
                 continue
 
             self._fast_sentence_panic(further[1], further[2], str(further[3]))
+            raise Exception("unreachable")
 
         return self
