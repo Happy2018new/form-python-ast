@@ -514,9 +514,9 @@ class CodeRunner:
                 if cond:
                     for ind, val in enumerate(i.code_block):
                         try:
-                            command = self._process_block(val)
-                            if command != STATES_KEEP_RUNNING:
-                                return command
+                            states = self._process_block(val)
+                            if states != STATES_KEEP_RUNNING:
+                                return states
                         except Exception as e:
                             if isinstance(e, CodeBlockException):
                                 raise e
@@ -546,12 +546,12 @@ class CodeRunner:
                 self._variables[variable] = i
                 for ind, val in enumerate(for_loop.code_block):
                     try:
-                        command = self._process_block(val)
-                        if command == STATES_LOOP_CONTINUE:
+                        states = self._process_block(val)
+                        if states == STATES_LOOP_CONTINUE:
                             break
-                        if command == STATES_LOOP_BREAK:
+                        if states == STATES_LOOP_BREAK:
                             return STATES_KEEP_RUNNING
-                        if command == STATES_CODE_RETURN:
+                        if states == STATES_CODE_RETURN:
                             return STATES_CODE_RETURN
                     except Exception as e:
                         if isinstance(e, CodeBlockException):
@@ -588,10 +588,10 @@ class CodeRunner:
         """
         for i in self.code_block:
             try:
-                command = self._process_block(i)
-                if command == STATES_CODE_RETURN:
+                states = self._process_block(i)
+                if states == STATES_CODE_RETURN:
                     break
-                if command != STATES_KEEP_RUNNING:
+                if states != STATES_KEEP_RUNNING:
                     raise Exception(
                         "Continue and break statement only accepted under for loop code block"
                     )
