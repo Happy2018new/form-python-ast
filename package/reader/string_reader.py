@@ -7,18 +7,18 @@ class StringReader:
     _buffer = ""
     _pointer = 0
 
-    def __init__(self, data, pointer=0):  # type: (str, int) -> None
+    def __init__(self, buffer, pointer=0):  # type: (str, int) -> None
         """初始化并返回一个新的字符串流式阅读器
 
         Args:
-            data (str):
+            buffer (str):
                 字符串阅读器的底层负载
             pointer (int, optional):
                 字符串阅读器的指针位置
                 默认值为 0
         """
-        self._buffer = data
-        self._pointer = min(pointer, len(data))
+        self._buffer = buffer
+        self._pointer = min(max(0, pointer), len(buffer))
 
     def buffer(self):  # type: () -> str
         """buffer 返回该阅读器的底层负载

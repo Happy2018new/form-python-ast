@@ -25,7 +25,7 @@ class AnyReader:
                 默认值为 0
         """
         self._contents = contents
-        self._pointer = pointer
+        self._pointer = min(max(0, pointer), len(contents) - 1)
 
     def contents(self):  # type: () -> list[Any]
         """contents 返回阅读器的底层负载
