@@ -547,11 +547,13 @@ class CodeRunner:
                 for ind, val in enumerate(for_loop.code_block):
                     try:
                         states = self._process_block(val)
-                        if states == STATES_LOOP_CONTINUE:
+                        if states == STATES_KEEP_RUNNING:
+                            continue
+                        elif states == STATES_LOOP_CONTINUE:
                             break
-                        if states == STATES_LOOP_BREAK:
+                        elif states == STATES_LOOP_BREAK:
                             return STATES_KEEP_RUNNING
-                        if states == STATES_CODE_RETURN:
+                        elif states == STATES_CODE_RETURN:
                             return STATES_CODE_RETURN
                     except Exception as e:
                         if isinstance(e, CodeBlockException):
@@ -589,9 +591,11 @@ class CodeRunner:
         for i in self.code_block:
             try:
                 states = self._process_block(i)
-                if states == STATES_CODE_RETURN:
+                if states == STATES_KEEP_RUNNING:
+                    continue
+                elif states == STATES_CODE_RETURN:
                     break
-                if states != STATES_KEEP_RUNNING:
+                elif states != STATES_KEEP_RUNNING:
                     raise Exception(
                         "Continue and break statement only accepted under for loop code block"
                     )
