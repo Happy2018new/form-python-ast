@@ -279,8 +279,8 @@ class ExpressionSelector(ExpressionElement):
 class ExpressionScore(ExpressionElement):
     """
     ExpressionScore 指示记分板分数表达式元素。
-    它保存了两个复杂表达式，
-    分别对它们求值可以得到目标选择器和记分板名
+    它保存了两个复杂表达式，求值后可以得到两个字符串，
+    分别是目标选择器（或通配符）和记分板名
     """
 
     element_id = ELEMENT_ID_SCORE  # type: int
@@ -300,8 +300,10 @@ class ExpressionScore(ExpressionElement):
     def parse(self, reader):  # type: (SentenceReader) -> ExpressionScore
         """
         parse 从底层流解析该记分板分数表达式元素的负载。
-        具体来说，它将解析两个复杂表达式，
-        并且它们的求值结果将分别作为目标选择器和记分板名
+
+        具体来说，它将依次解析两个复杂表达式，
+        并且这两个复杂表达式的求值结果将分别
+        作为目标选择器（或通配符）和记分板名
 
         Args:
             reader (SentenceReader): 底层 Token 流

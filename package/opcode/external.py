@@ -72,13 +72,13 @@ class GameInteract:
         Args:
             target (str):
                 要被查询分数的实体。
-                应是一个目标选择器
+                应是一个目标选择器（或通配符）
             scoreboard (str):
                 要查询的记分板名
 
         Returns:
             int:
-                目标实体在给定记分板的分数。
+                目标在给定记分板的分数。
                 在本函数中，总是返回 0
         """
         _, _ = target, scoreboard
@@ -140,8 +140,8 @@ class GameInteract:
         Returns:
             Callable[[str, str], int]:
                 返回相应的函数。
-                该函数的参数为目标选择器和记分板名，
-                返回值为该实体在给定记分板的分数
+                该函数的参数为目标选择器（或通配符）和记分板名，
+                返回值为该记分项在给定记分板的分数
         """
         if self.score is None:
             return self._default_score
