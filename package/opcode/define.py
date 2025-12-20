@@ -58,7 +58,7 @@ class ConditionWithCode:
             state_line (str):
                 表示条件的源代码行，
                 目前只用于调试和错误提示
-            code_block (list, optional):
+            code_block (list[OpcodeBase], optional):
                 该条件代码块中所含的实际代码，
                 不包括条件本身。默认值为空列表
         """
@@ -80,6 +80,12 @@ class ConditionWithCode:
 
 
 class ForLoopCodeBlock:
+    """
+    ForLoopCodeBlock 指示循环代码块。
+    它包含了循环次数及每次循环所执行的代码块。
+    它也同时保存了用于标识循环变量的变量名
+    """
+
     variable = ""  # type: str
     repeat_times = DEFAULT_EMPTY_EXPRESSION  # type: ExpressionCombine
     state_line = ""  # type: str
@@ -88,12 +94,32 @@ class ForLoopCodeBlock:
     def __init__(
         self, variable, repeat_times, state_line, code_block=[]
     ):  # type: (str, ExpressionCombine, str, list[OpcodeBase]) -> None
+        """初始化并返回一个新的循环代码块
+
+        Args:
+            variable (str):
+                用于标识循环变量的变量名
+            repeat_times (ExpressionCombine):
+                这个循环需要执行的次数。
+                表达式的求值结果应是整数
+            state_line (str):
+                定义循环变量和循环次数的源代码行，
+                目前只用于调试和错误提示
+            code_block (list[OpcodeBase], optional):
+                该循环所包含的所有代码。
+                默认值为空列表
+        """
         self.variable = variable
         self.repeat_times = repeat_times
         self.state_line = state_line
         self.code_block = code_block if len(code_block) > 0 else []
 
     def __repr__(self):  # type: () -> str
+        """返回该循环代码块的字符串表示
+
+        Returns:
+            str: 该循环代码块的字符串表示
+        """
         return "ForLoopCodeBlock(variable={}, repeat_times={}, state_line={}, code_block={})".format(
             json.dumps(self.variable, ensure_ascii=False),
             self.repeat_times,
@@ -196,29 +222,60 @@ class OpcodeCondition(OpcodeBase):
 
 
 class OpcodeForLoop(OpcodeBase):
+    """OpcodeForLoop 指示循环语句"""
+
     opcode_id = OPCODE_FOR_LOOP  # type: int
     opcode_payload = None  # type: ForLoopCodeBlock | None
     origin_line = "for"  # type: str
 
     def __init__(self, payload):  # type: (ForLoopCodeBlock) -> None
+        """初始化并返回一个新的 OpcodeForLoop
+
+        Args:
+            payload (ForLoopCodeBlock): 该循环语句的负载
+        """
         OpcodeBase.__init__(self, OPCODE_FOR_LOOP, payload, "for")
 
 
 class OpcodeContinue(OpcodeBase):
+    """
+    OpcodeContinue 指示循环语句中的 continue 语句，
+    它被用于跳过当前循环的剩余代码，并进入下一次循环
+    """
+
     opcode_id = OPCODE_CONTINUE  # type: int
     opcode_payload = None  # type: None
     origin_line = ""  # type: str
 
     def __init__(self, line):  # type: (str) -> None
+        """初始化并返回一个新的 OpcodeContinue
+
+        Args:
+            line (str):
+                该 continue 语句对应的源代码行，
+                目前只用于调试和错误提示
+        """
         OpcodeBase.__init__(self, OPCODE_CONTINUE, None, line)
 
 
 class OpcodeBreak(OpcodeBase):
+    """
+    OpcodeBreak 指示循环语句中的 break 语句，
+    它被用于中止当前循环的执行，并跳出循环体
+    """
+
     opcode_id = OPCODE_BREAK  # type: int
     opcode_payload = None  # type: None
     origin_line = ""  # type: str
 
     def __init__(self, line):  # type: (str) -> None
+        """初始化并返回一个新的 OpcodeBreak
+
+        Args:
+            line (str):
+                该 break 语句对应的源代码行，
+                目前只用于调试和错误提示
+        """
         OpcodeBase.__init__(self, OPCODE_BREAK, None, line)
 
 

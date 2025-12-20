@@ -64,10 +64,20 @@ EMPTY_BUILTIN_FUNCTION = BuiltInFunction()
 
 
 class CodeBlockException(Exception):
+    """
+    CodeBlockException 是运行特殊代码块出现错误时抛出的异常。
+    就目前而言，它被用于条件代码块和循环代码块中
+    """
+
     pass
 
 
 class CodeRunner:
+    """
+    CodeRunner 是该编程语言的解释器。
+    它用于运行已经过编译的抽象语法表示
+    """
+
     code_block = []  # type: list[OpcodeBase]
     _interact = EMPTY_GAME_INTERACT  # type: GameInteract
     _builtins = EMPTY_BUILTIN_FUNCTION  # type: BuiltInFunction
@@ -78,6 +88,13 @@ class CodeRunner:
         self,
         code_block=[],  # type: list[OpcodeBase]
     ):  # type: (...) -> None
+        """初始化并返回一个新的解释器
+
+        Args:
+            code_block (list[OpcodeBase], optional):
+                CodeParser 的编译结果。
+                默认值为空列表
+        """
         self.code_block = code_block if len(code_block) > 0 else []
         self._interact = EMPTY_GAME_INTERACT
         self._builtins = EMPTY_BUILTIN_FUNCTION
@@ -85,6 +102,19 @@ class CodeRunner:
         self._return = None
 
     def _fast_normal_panic(self, code_block, err):  # type: (OpcodeBase, str) -> None
+        """_fast_normal_panic 抛出标准的运行时错误
+
+        Args:
+            code_block (OpcodeBase):
+                运行时错误发生时，
+                错误所在的代码块
+            err (str):
+                需要抛出的错误信息
+
+        Raises:
+            Exception:
+                err 所指示的错误
+        """
         raise Exception(
             "Runtime Error.\n\n- Error -\n  {}\n\n- Code -\n  {}".format(
                 err, code_block.origin_line
@@ -94,6 +124,24 @@ class CodeRunner:
     def _fast_condition_panic(
         self, condition, index=-1, err=""
     ):  # type: (ConditionWithCode, int, str) -> None
+        """
+        _fast_condition_panic 抛出发生在条件代码块中的运行时错误
+
+        Args:
+            condition (ConditionWithCode):
+                错误所在的条件代码块
+            index (int, optional):
+                如果错误发生在条件本身，则应提供 -1。
+                否则，错误发生在内部代码块中，那么请提供相应的索引。
+                默认值为 -1
+            err (str, optional):
+                需要抛出的错误信息。
+                默认值为空字符串
+
+        Raises:
+            CodeBlockException:
+                err 所指示的错误
+        """
         prefix = "Runtime Error in Condition.\n\n- Error -\n  {}\n\n- Condition -\n  {}".format(
             err, condition.state_line
         )
@@ -106,6 +154,24 @@ class CodeRunner:
     def _fast_for_loop_panic(
         self, for_loop, index=-1, err=""
     ):  # type: (ForLoopCodeBlock, int, str) -> None
+        """
+        _fast_for_loop_panic 抛出发生在循环代码块中的运行时错误
+
+        Args:
+            condition (ForLoopCodeBlock):
+                错误所在的循环代码块
+            index (int, optional):
+                如果错误发生在循环次数解析，则应提供 -1。
+                否则，错误发生在内部代码块中，那么请提供相应的索引。
+                默认值为 -1
+            err (str, optional):
+                需要抛出的错误信息。
+                默认值为空字符串
+
+        Raises:
+            CodeBlockException:
+                err 所指示的错误
+        """
         prefix = "Runtime Error in For Loop.\n\n- Error -\n  {}\n\n- For Loop -\n  {}".format(
             err, for_loop.state_line
         )
@@ -118,6 +184,21 @@ class CodeRunner:
     def _process_literal(
         self, element
     ):  # type: (ExpressionLiteral) -> int | bool | float | str
+        """
+        _process_literal 解析并返回字面量表达式元素的值
+
+        Args:
+            element (ExpressionLiteral):
+                给定的字面量表达式元素
+
+        Raises:
+            Exception:
+                当求值出错时抛出
+
+        Returns:
+            int | bool | float | str:
+                目标字面量表达式元素的求值结果
+        """
         if element.element_id == ELEMENT_ID_VAR:
             assert isinstance(element.element_payload, str)
             if element.element_payload not in self._variables:
@@ -145,6 +226,24 @@ class CodeRunner:
     def _process_ref(
         self, element
     ):  # type: (ExpressionReference) -> int | bool | float | str
+        """
+        _process_ref 处理引用表达式元素。
+
+        它对其中保存的索引进行求值，调用相应的函数，
+        并以这样的方式来获取对应的表单响应数据
+
+        Args:
+            element (ExpressionReference):
+                给定的引用表达式元素
+
+        Raises:
+            Exception:
+                当求值出错时抛出
+
+        Returns:
+            int | bool | float | str:
+                目标引用表达式元素的求值结果
+        """
         index = self._process_element(element.element_payload[1])
         if isinstance(index, bool) or not isinstance(index, int):
             raise Exception(
@@ -176,6 +275,22 @@ class CodeRunner:
         return value
 
     def _process_selector(self, element):  # type: (ExpressionSelector) -> str
+        """
+        _process_selector 解析目标选择器表达式元素所指示的目标选择器，
+        并返回解析所得的，对应这个目标选择器的实体名
+
+        Args:
+            element (ExpressionSelector):
+                给定的目标选择器表达式元素
+
+        Raises:
+            Exception:
+                当解析目标选择器发生错误时抛出
+
+        Returns:
+            str:
+                对应相应目标选择器的实体名
+        """
         assert element.element_payload is not None
         value = self._process_element(element.element_payload)
         if not isinstance(value, str):
@@ -185,6 +300,22 @@ class CodeRunner:
         return self._interact.selector_func()(value)
 
     def _process_score(self, element):  # type: (ExpressionScore) -> int
+        """
+        _process_score 获取记分板分数表达式元素所指示的实体的分数。
+        应当说明的是，其中所涉及的记分板亦可在表达式元素中找到
+
+        Args:
+            element (ExpressionScore):
+                给定的记分板分数表达式元素
+
+        Raises:
+            Exception:
+                当获取分数发生错误时抛出
+
+        Returns:
+            int:
+                对应实体在相应记分板上的分数
+        """
         target = self._process_element(element.element_payload[0])
         if not isinstance(target, str):
             raise Exception(
@@ -200,6 +331,26 @@ class CodeRunner:
         return self._interact.score_func()(target, scoreboard)
 
     def _process_command(self, element):  # type: (ExpressionCommand) -> int
+        """
+        _process_command 运行命令表达式元素所指示的命令，
+        并返回命令的成功次数。
+
+        就目前而言，由于网易接口只能判定命令是否成功，
+        因此返回值应只可能是 0 或 1
+
+        Args:
+            element (ExpressionCommand):
+                给定的命令表达式元素
+
+        Raises:
+            Exception:
+                在运行相应命令发生错误时抛出
+
+        Returns:
+            int:
+                命令的成功次数。
+                应只可能是 0 或 1
+        """
         assert element.element_payload is not None
         command = self._process_element(element.element_payload)
         if not isinstance(command, str):
@@ -211,6 +362,20 @@ class CodeRunner:
     def _process_element(
         self, element
     ):  # type: (ExpressionElement) -> int | bool | float | str
+        """_process_element 对给定的表达式元素进行求值
+
+        Args:
+            element (ExpressionElement):
+                欲被求值的表达式元素
+
+        Raises:
+            Exception:
+                求值发生错误时抛出
+
+        Returns:
+            int | bool | float | str:
+                给定表达式元素的求值结果
+        """
         if isinstance(element, ExpressionLiteral):
             return self._process_literal(element)
         if isinstance(element, ExpressionReference):
@@ -296,6 +461,26 @@ class CodeRunner:
         raise Exception("Unknown element is given; element={}".format(element))
 
     def _process_block(self, code_block):  # type: (OpcodeBase) -> int
+        """
+        _process_block 运行一个语句（操作码），或者一个代码块
+
+        Args:
+            code_block (OpcodeBase):
+                给定的基本操作对象
+
+        Raises:
+            Exception:
+                当运行发生错误时抛出
+
+        Returns:
+            int:
+                在运行该操作码后，解释器应该转移到哪个状态。
+                应只可能是下面列出的可能之一。
+                    - STATES_KEEP_RUNNING: 解释器继续运行
+                    - STATES_LOOP_CONTINUE: 解释器单次跳过循环体
+                    - STATES_LOOP_BREAK: 解释器终止循环体
+                    - STATES_CODE_RETURN: 解释器返回值，然后终止
+        """
         if isinstance(code_block, OpcodeAssign):
             name = code_block.opcode_payload[0]
             value = self._process_element(code_block.opcode_payload[1])
@@ -381,6 +566,26 @@ class CodeRunner:
     def _running(
         self, require_return
     ):  # type: (bool) -> int | bool | float | str | None
+        """
+        _running 以解释的方式运行所有代码，
+        并返回这些代码在运行时的返回值。
+
+        它没有进行任何初始化工作，
+        也不会进行任何的垃圾回收
+
+        Args:
+            require_return (bool):
+                是否检查这些代码是否返回值。
+                如果为真且没有返回值，则抛出异常
+
+        Raises:
+            Exception:
+                当运行发生错误时抛出
+
+        Returns:
+            int | bool | float | str | None:
+                运行代码时所得的返回值
+        """
         for i in self.code_block:
             try:
                 command = self._process_block(i)
@@ -407,6 +612,26 @@ class CodeRunner:
         interact=EMPTY_GAME_INTERACT,
         builtins=EMPTY_BUILTIN_FUNCTION,
     ):  # type: (bool, GameInteract, BuiltInFunction) -> int | bool | float | str | None
+        """
+        running 以解释方式的运行所有代码，
+        并返回这些代码在运行时的返回值
+
+        Args:
+            require_return (bool, optional):
+                是否检查这些代码是否返回值。
+                如果为真且没有返回值，则抛出异常。
+                默认值为真
+            interact (GameInteract, optional):
+                用于与 Minecraft 进行交互的接口。
+                默认值为 EMPTY_GAME_INTERACT
+            builtins (BuiltInFunction, optional):
+                外部函数提供者为用户定义的内建函数。
+                默认值为 EMPTY_BUILTIN_FUNCTION
+
+        Returns:
+            int | bool | float | str | None:
+                运行代码时所得的返回值
+        """
         self._interact = interact
         self._builtins = builtins
         self._variables = {}
