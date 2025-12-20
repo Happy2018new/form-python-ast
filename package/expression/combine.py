@@ -136,7 +136,7 @@ class ExpressionCombine(ExpressionElement):
         """初始化并返回一个新的 ExpressionCombine
 
         Args:
-            payload (list, optional):
+            payload (list[ExpressionElement], optional):
                 多个表达式元素组成的列表。
                 默认值为空列表
         """
