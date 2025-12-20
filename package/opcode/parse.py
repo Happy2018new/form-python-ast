@@ -71,7 +71,7 @@ class CodeParser:
 
         ptr1, ptr2, err = sentence.parse_all()
         if err is not None:
-            self._fast_normal_panic(ptr1, ptr2, err)
+            self._fast_normal_panic(ptr1, ptr2, str(err))
             raise Exception("unreachable")
 
         self.reader = SentenceReader(sentence.tokens)

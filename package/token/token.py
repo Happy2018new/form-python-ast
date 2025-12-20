@@ -101,6 +101,11 @@ TOKEN_ID_TO_NAME[TOKEN_ID_SEPSEPARATE] = "|"
 
 
 class Token:
+    """
+    Token 是代码中的最小语法单元。它包含了 Token ID 以及相应的负载。
+    并且出于调试目的，它还保存了每个 Token 在源代码对应的位置
+    """
+
     token_id = 0
     token_payload = ""
     ori_start_ptr = 0
@@ -109,12 +114,32 @@ class Token:
     def __init__(
         self, token_id, token_payload="", ori_start_ptr=0, ori_end_ptr=0
     ):  # type: (int, str, int, int) -> None
+        """初始化并返回一个新的 Token
+
+        Args:
+            token_id (int):
+                该 Token 的 ID
+            token_payload (str, optional):
+                该 Token 的负载。
+                默认值为空字符串
+            ori_start_ptr (int, optional):
+                该 Token 对应的源代码的起始位置。
+                默认值为 0
+            ori_end_ptr (int, optional):
+                该 Token 对应的源代码的终止位置。
+                默认值为 0
+        """
         self.token_id = token_id
         self.token_payload = token_payload
         self.ori_start_ptr = ori_start_ptr
         self.ori_end_ptr = ori_end_ptr
 
     def __repr__(self):  # type: () -> str
+        """返回该 Token 的字符串表示
+
+        Returns:
+            str: 该 Token 的字符串表示
+        """
         prefix = "Token(id={}, name={}".format(
             self.token_id,
             json.dumps(TOKEN_ID_TO_NAME[self.token_id], ensure_ascii=False),
