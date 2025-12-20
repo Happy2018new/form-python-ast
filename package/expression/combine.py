@@ -113,6 +113,9 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_FALSE,
 )
 
+ORD_ZERO = ord("0")
+ORD_NINE = ord("9")
+
 
 class ExpressionCombine(ExpressionElement):
     """
@@ -208,13 +211,13 @@ class ExpressionCombine(ExpressionElement):
                     json.dumps(token.token_payload, ensure_ascii=False)
                 )
             )
-        for i in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-            if token.token_payload.startswith(i):
-                raise Exception(
-                    "try_parse_var: Syntax error: Variable name should not start with number ({}); token.token_payload={}".format(
-                        i, json.dumps(token.token_payload, ensure_ascii=False)
-                    )
+        if ORD_ZERO <= ord(token.token_payload[0]) <= ORD_NINE:
+            raise Exception(
+                "try_parse_var: Syntax error: Variable name should not start with number ({}); token.token_payload={}".format(
+                    token.token_payload[0],
+                    json.dumps(token.token_payload, ensure_ascii=False),
                 )
+            )
 
         self.element_payload.append(
             ExpressionLiteral(ELEMENT_ID_VAR, token.token_payload)
