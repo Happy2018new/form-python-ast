@@ -188,7 +188,7 @@ class CodeParser:
         if unread:
             self.reader.unread()
 
-    def _parse_variable(self, ptr):  # type: (int) -> Token
+    def _parse_variable(self, ptr):  # type: (int) -> str
         token = self.reader.read()
         if token is None:
             self._fast_sentence_panic(
@@ -202,7 +202,8 @@ class CodeParser:
                 "Expected a variable name but got {}".format(token),
             )
             raise Exception("unreachable")
-        return token
+        self._validate_var_name(token, ptr, self.reader.pointer())
+        return token.token_payload
 
     def _parse_expression(
         self, context=CONTEXT_PARSE_ASSIGN, panic=True, unread=False
@@ -338,7 +339,6 @@ class CodeParser:
 
     def _parse_for_loop(self, ptr):  # type: (int) -> OpcodeForLoop
         variable = self._parse_variable(ptr)
-        self._validate_var_name(variable, ptr, self.reader.pointer())
         self._validate_next_token(
             self.reader.pointer(),
             TOKEN_ID_COMMA,
@@ -376,7 +376,6 @@ class CodeParser:
         return OpcodeForLoop(
             ForLoopCodeBlock(
                 variable,
-                variable.token_payload,
                 repeat_times,
                 self._get_line_code(ptr, end_expr_ptr),
                 code_block,
