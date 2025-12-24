@@ -45,7 +45,7 @@ class ExpressionGreaterThan(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A > B 的结果即为 ExpressionGreaterThan 的值。
+                运算 A > B 的结果即为 ExpressionGreaterThan 的值
 
         Raises:
             Exception:
@@ -74,7 +74,7 @@ class ExpressionLessThan(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A < B 的结果即为 ExpressionLessThan 的值。
+                运算 A < B 的结果即为 ExpressionLessThan 的值
 
         Raises:
             Exception:
@@ -103,7 +103,7 @@ class ExpressionGreaterEqual(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A >= B 的结果即为 ExpressionGreaterEqual 的值。
+                运算 A >= B 的结果即为 ExpressionGreaterEqual 的值
 
         Raises:
             Exception:
@@ -132,7 +132,7 @@ class ExpressionLessEqual(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A <= B 的结果即为 ExpressionLessEqual 的值。
+                运算 A <= B 的结果即为 ExpressionLessEqual 的值
 
         Raises:
             Exception:
@@ -161,7 +161,7 @@ class ExpressionEqual(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A == B 的结果即为 ExpressionEqual 的值。
+                运算 A == B 的结果即为 ExpressionEqual 的值
 
         Raises:
             Exception:
@@ -190,7 +190,7 @@ class ExpressionNotEqual(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A != B 的结果即为 ExpressionNotEqual 的值。
+                运算 A != B 的结果即为 ExpressionNotEqual 的值
 
         Raises:
             Exception:
@@ -269,7 +269,7 @@ class ExpressionIn(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 2 个表达式元素 A 和 B 组成的列表。
-                运算 A in B 的结果即为 ExpressionIn 的值。
+                运算 A in B 的结果即为 ExpressionIn 的值
 
         Raises:
             Exception:
@@ -298,7 +298,7 @@ class ExpressionInverse(ExpressionOperator):
         Args:
             element_payload (list[ExpressionElement]):
                 由 1 个表达式元素 A 组成的列表。
-                运算 not A 的结果即为 ExpressionInverse 的值。
+                运算 not A 的结果即为 ExpressionInverse 的值
 
         Raises:
             Exception:
