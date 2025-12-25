@@ -181,7 +181,7 @@ class GameInteract:
             - 否则，返回 T==S2 的运算结果
         对于信息表单：
             - 如果 T 为 -1，则应直接返回 S3
-            - 否则，返回 T==S3 的运算结果
+            - 否则，返回 T==int(S3) 的运算结果
 
         Returns:
             Callable[[int], int | bool | float | str]:
