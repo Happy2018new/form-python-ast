@@ -441,13 +441,13 @@ class CodeRunner:
                 if temp:
                     return temp
             return temp
+        if element.element_id == ELEMENT_ID_INVERSE:
+            value = self._process_element(element.element_payload[0])  # type: ignore
+            return not value  # type: ignore
         if element.element_id == ELEMENT_ID_IN:
             left = self._process_element(element.element_payload[0])  # type: ignore
             right = self._process_element(element.element_payload[1])  # type: ignore
             return left in right  # type: ignore
-        if element.element_id == ELEMENT_ID_INVERSE:
-            value = self._process_element(element.element_payload[0])  # type: ignore
-            return not value  # type: ignore
         # At last, we process the game interact operations
         if element.element_id == ELEMENT_ID_COMMAND:
             return self._process_command(element)  # type: ignore
