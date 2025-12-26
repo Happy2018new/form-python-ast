@@ -14,18 +14,37 @@ from .define import (
     OpcodeExpression,
     OpcodeReturn,
 )
-from ..expression.combine import ExpressionCombine
 from ..expression.define import (
     ExpressionElement,
+    TYPE_ENUM_INT,
     TYPE_ENUM_BOOL,
     TYPE_ENUM_FLOAT,
-    TYPE_ENUM_INT,
     TYPE_ENUM_STR,
     ELEMENT_ID_VAR,
+    ELEMENT_ID_EXPR,
+    ELEMENT_ID_EQUAL,
+    ELEMENT_ID_LESS_THAN,
+    ELEMENT_ID_GREATER_THAN,
+    ELEMENT_ID_LESS_EQUAL,
+    ELEMENT_ID_GREATER_EQUAL,
+    ELEMENT_ID_ADD,
+    ELEMENT_ID_REMOVE,
+    ELEMENT_ID_TIMES,
+    ELEMENT_ID_DIVIDE,
+    ELEMENT_ID_NOT_EQUAL,
     ELEMENT_ID_INT,
     ELEMENT_ID_BOOL,
     ELEMENT_ID_FLOAT,
     ELEMENT_ID_STR,
+    ELEMENT_ID_REF,
+    ELEMENT_ID_SELECTOR,
+    ELEMENT_ID_SCORE,
+    ELEMENT_ID_COMMAND,
+    ELEMENT_ID_FUNC,
+    ELEMENT_ID_AND,
+    ELEMENT_ID_OR,
+    ELEMENT_ID_IN,
+    ELEMENT_ID_INVERSE,
 )
 from ..expression.baisc import (
     ExpressionLiteral,
@@ -33,25 +52,6 @@ from ..expression.baisc import (
     ExpressionSelector,
     ExpressionScore,
     ExpressionCommand,
-    ExpressionFunction,
-)
-from ..expression.compute import (
-    ExpressionTimes,
-    ExpressionDivide,
-    ExpressionAdd,
-    ExpressionRemove,
-)
-from ..expression.compare import (
-    ExpressionGreaterThan,
-    ExpressionLessThan,
-    ExpressionGreaterEqual,
-    ExpressionLessEqual,
-    ExpressionEqual,
-    ExpressionNotEqual,
-    ExpressionAnd,
-    ExpressionOr,
-    ExpressionIn,
-    ExpressionInverse,
 )
 
 STATES_KEEP_RUNNING = 0
@@ -200,17 +200,16 @@ class CodeRunner:
                 目标字面量表达式元素的求值结果
         """
         if element.element_id == ELEMENT_ID_VAR:
-            assert isinstance(element.element_payload, str)
             if element.element_payload not in self._variables:
                 raise Exception(
                     "Variable {} used before assignment".format(
                         json.dumps(element.element_payload, ensure_ascii=False)
                     )
                 )
-            return self._variables[element.element_payload]
+            return self._variables[element.element_payload]  # type: ignore
 
-        if isinstance(element.element_payload, ExpressionCombine):
-            value = self._process_element(element.element_payload)
+        if element.element_id == ELEMENT_ID_EXPR:
+            value = self._process_element(element.element_payload)  # type: ignore
             if element.element_id == ELEMENT_ID_INT:
                 return int(value)
             elif element.element_id == ELEMENT_ID_BOOL:
@@ -221,7 +220,7 @@ class CodeRunner:
                 return str(value)
             return value
 
-        return element.element_payload
+        return element.element_payload  # type: ignore
 
     def _process_ref(
         self, element
@@ -251,15 +250,15 @@ class CodeRunner:
             )
         value = self._interact.ref_func()(index)
 
-        if element.element_payload[0] == TYPE_ENUM_BOOL:
+        if element.element_payload[0] == TYPE_ENUM_INT:
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise Exception(
+                    "Assertion failed: Expect an int but got {}".format(value)
+                )
+        elif element.element_payload[0] == TYPE_ENUM_BOOL:
             if not isinstance(value, bool):
                 raise Exception(
                     "Assertion failed: Expect a bool but got {}".format(value)
-                )
-        elif element.element_payload[0] == TYPE_ENUM_INT:
-            if not isinstance(value, int):
-                raise Exception(
-                    "Assertion failed: Expect an int but got {}".format(value)
                 )
         elif element.element_payload[0] == TYPE_ENUM_FLOAT:
             if not isinstance(value, float):
@@ -376,88 +375,94 @@ class CodeRunner:
             int | bool | float | str:
                 给定表达式元素的求值结果
         """
+        # Literal and expression process first
         if isinstance(element, ExpressionLiteral):
             return self._process_literal(element)
-        if isinstance(element, ExpressionReference):
-            return self._process_ref(element)
-        if isinstance(element, ExpressionSelector):
-            return self._process_selector(element)
-        if isinstance(element, ExpressionScore):
-            return self._process_score(element)
-        if isinstance(element, ExpressionCommand):
-            return self._process_command(element)
-        if isinstance(element, ExpressionFunction):
-            name = element.element_payload[0]
-            func = self._builtins.get_func(name)
-            args = [self._process_element(i) for i in element.element_payload[1]]
-            return func(*args)
-        if isinstance(element, ExpressionTimes):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
-                temp *= self._process_element(i)  # type: ignore
-            return temp
-        if isinstance(element, ExpressionDivide):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
-                temp /= self._process_element(i)  # type: ignore
-            return temp
-        if isinstance(element, ExpressionAdd):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
+        if element.element_id == ELEMENT_ID_EXPR:
+            return self._process_element(element.element_payload[0])  # type: ignore
+        # Then process compute operations
+        if element.element_id == ELEMENT_ID_ADD:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
                 temp += self._process_element(i)  # type: ignore
             return temp
-        if isinstance(element, ExpressionRemove):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
+        if element.element_id == ELEMENT_ID_REMOVE:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
                 temp -= self._process_element(i)  # type: ignore
             return temp
-        if isinstance(element, ExpressionGreaterThan):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left > right  # type: ignore
-        if isinstance(element, ExpressionLessThan):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left < right  # type: ignore
-        if isinstance(element, ExpressionGreaterEqual):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left >= right  # type: ignore
-        if isinstance(element, ExpressionLessEqual):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
-            return left <= right  # type: ignore
-        if isinstance(element, ExpressionEqual):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
+        if element.element_id == ELEMENT_ID_TIMES:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
+                temp *= self._process_element(i)  # type: ignore
+            return temp
+        if element.element_id == ELEMENT_ID_DIVIDE:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
+                temp /= self._process_element(i)  # type: ignore
+            return temp
+        # Then process compare operations
+        if element.element_id == ELEMENT_ID_EQUAL:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
             return left == right  # type: ignore
-        if isinstance(element, ExpressionNotEqual):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
+        if element.element_id == ELEMENT_ID_NOT_EQUAL:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
             return left != right  # type: ignore
-        if isinstance(element, ExpressionAnd):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
+        if element.element_id == ELEMENT_ID_GREATER_THAN:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
+            return left > right  # type: ignore
+        if element.element_id == ELEMENT_ID_LESS_THAN:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
+            return left < right  # type: ignore
+        if element.element_id == ELEMENT_ID_GREATER_EQUAL:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
+            return left >= right  # type: ignore
+        if element.element_id == ELEMENT_ID_LESS_EQUAL:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
+            return left <= right  # type: ignore
+        # Then process logic operations
+        if element.element_id == ELEMENT_ID_AND:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
                 temp = temp and self._process_element(i)
                 if not temp:
                     return temp
             return temp
-        if isinstance(element, ExpressionOr):
-            temp = self._process_element(element.element_payload[0])
-            for i in element.element_payload[1:]:
+        if element.element_id == ELEMENT_ID_OR:
+            temp = self._process_element(element.element_payload[0])  # type: ignore
+            for i in element.element_payload[1:]:  # type: ignore
                 temp = temp or self._process_element(i)
                 if temp:
                     return temp
             return temp
-        if isinstance(element, ExpressionIn):
-            left = self._process_element(element.element_payload[0])
-            right = self._process_element(element.element_payload[1])
+        if element.element_id == ELEMENT_ID_IN:
+            left = self._process_element(element.element_payload[0])  # type: ignore
+            right = self._process_element(element.element_payload[1])  # type: ignore
             return left in right  # type: ignore
-        if isinstance(element, ExpressionInverse):
-            value = self._process_element(element.element_payload[0])
+        if element.element_id == ELEMENT_ID_INVERSE:
+            value = self._process_element(element.element_payload[0])  # type: ignore
             return not value  # type: ignore
-        if isinstance(element, ExpressionCombine):
-            return self._process_element(element.element_payload[0])
+        # At last, we process the game interact operations
+        if element.element_id == ELEMENT_ID_COMMAND:
+            return self._process_command(element)  # type: ignore
+        if element.element_id == ELEMENT_ID_FUNC:
+            name = element.element_payload[0]  # type: ignore
+            func = self._builtins.get_func(name)
+            args = [self._process_element(i) for i in element.element_payload[1]]  # type: ignore
+            return func(*args)
+        if element.element_id == ELEMENT_ID_SCORE:
+            return self._process_score(element)  # type: ignore
+        if element.element_id == ELEMENT_ID_SELECTOR:
+            return self._process_selector(element)  # type: ignore
+        if element.element_id == ELEMENT_ID_REF:
+            return self._process_ref(element)  # type: ignore
+        # If the element is unknown, raise an exception
         raise Exception("Unknown element is given; element={}".format(element))
 
     def _process_block(self, code_block):  # type: (OpcodeBase) -> int
