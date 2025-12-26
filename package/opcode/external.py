@@ -25,7 +25,12 @@ class GameInteract:
         command=None,  # type: Callable[[str], int] | None
         ref=None,  # type: Callable[[int], int | bool | float | str] | None
     ):  # type: (...) -> None
-        """初始化并返回一个新的 GameInteract
+        """
+        初始化并返回一个新的 GameInteract。
+
+        另外，对于 command 函数，就目前而言，由于网易接口的限制：
+            - 命令执行上下文中的命令执行朝向无法被传递
+            - 命令执行后只能判定是否执行成功，因此该函数的返回值只可能是 0 或 1
 
         Args:
             selector (Callable[[str], str] | None, optional):
@@ -35,8 +40,7 @@ class GameInteract:
                 用于获取记分板分数的实现。其返回值指示对应记分板中相应计分项的分数。
                 如果不提供，那么总是返回 0。默认值为 None
             command (Callable[[str], int] | None, optional):
-                用于执行游戏命令的实现。其返回值指示命令的成功次数。
-                就目前而言，由于网易接口只能判定命令是否成功，因此它只可能是 0 或 1。
+                用于在给定命令执行上下文执行游戏命令的实现。其返回值指示命令的成功次数。
                 如果不提供，那么总是返回 0。默认值为 None
             ref (Callable[[int], int | bool | float | str] | None, optional):
                 详见本类中 ref_func 函数的注释，本处不再赘述。
@@ -149,7 +153,8 @@ class GameInteract:
 
     def command_func(self):  # type: () -> Callable[[str], int]
         """
-        command_func 返回用于在特定上下文执行命令的函数
+        command_func 返回用于在特定上下文执行命令的函数。
+        由于网易接口限制，命令执行上下文中的命令执行朝向无法被传递
 
         Returns:
             Callable[[str], int]:
