@@ -600,7 +600,7 @@ class CodeRunner:
                     continue
                 elif states == STATES_CODE_RETURN:
                     break
-                elif states != STATES_KEEP_RUNNING:
+                else:
                     raise Exception(
                         "Continue and break statement only accepted under for loop code block"
                     )
