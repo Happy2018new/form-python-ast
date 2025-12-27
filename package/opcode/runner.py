@@ -14,6 +14,7 @@ from .define import (
     OpcodeExpression,
     OpcodeReturn,
 )
+from ..expression.combine import ExpressionCombine
 from ..expression.define import (
     ExpressionElement,
     TYPE_ENUM_INT,
@@ -208,8 +209,8 @@ class CodeRunner:
                 )
             return self._variables[element.element_payload]  # type: ignore
 
-        if element.element_id == ELEMENT_ID_EXPR:
-            value = self._process_element(element.element_payload)  # type: ignore
+        if isinstance(element.element_payload, ExpressionCombine):
+            value = self._process_element(element.element_payload)
             if element.element_id == ELEMENT_ID_INT:
                 return int(value)
             elif element.element_id == ELEMENT_ID_BOOL:
@@ -220,7 +221,7 @@ class CodeRunner:
                 return str(value)
             return value
 
-        return element.element_payload  # type: ignore
+        return element.element_payload
 
     def _process_ref(
         self, element
