@@ -234,19 +234,19 @@ return '000000'
 
 
 ## 基本数据类型
-另见 [data_type.md](./docs/data_type.md)
+另见 [docs/data_type.md](./docs/data_type.md)
 
 
 
 ## 运算
-另见 [compute.md](./docs/compute.md)
+另见 [docs/compute.md](./docs/compute.md)
 
 
 
 ## 与游戏进行交互
-另见 [external.md](./docs/external.md)
+另见 [docs/external.md](./docs/external.md)
 
 
 
 ## 表达式、括号和强制类型转换
-另见 [expression.md](./docs/expression.md)
+另见 [docs/expression.md](./docs/expression.md)
