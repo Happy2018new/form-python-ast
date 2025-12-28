@@ -29,6 +29,7 @@ class GameInteract:
         初始化并返回一个新的 GameInteract。
 
         另外，对于 command 函数，就目前而言，由于网易接口的限制：
+            - 命令执行上下文中的命令执行者必须是实体
             - 命令执行上下文中的命令执行朝向无法被传递
             - 命令执行后只能判定是否执行成功，因此该函数的返回值只可能是 0 或 1
 
@@ -164,7 +165,10 @@ class GameInteract:
     def command_func(self):  # type: () -> Callable[[str], int]
         """
         command_func 返回用于在特定上下文执行命令的函数。
-        由于网易接口限制，命令执行上下文中的命令执行朝向无法被传递
+
+        就目前而言，由于网易接口的限制：
+            - 命令执行上下文中的命令执行者必须是实体
+            - 命令执行上下文中的命令执行朝向无法被传递
 
         Returns:
             Callable[[str], int]:
