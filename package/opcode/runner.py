@@ -618,10 +618,11 @@ class CodeRunner:
 
     def running(
         self,
-        require_return=True,
-        interact=EMPTY_GAME_INTERACT,
-        builtins=EMPTY_BUILTIN_FUNCTION,
-    ):  # type: (bool, GameInteract, BuiltInFunction) -> int | bool | float | str | None
+        require_return=True,  # type: bool
+        variables={},  # type: dict[str, int | bool | float | str]
+        interact=EMPTY_GAME_INTERACT,  # type: GameInteract
+        builtins=EMPTY_BUILTIN_FUNCTION,  # type: BuiltInFunction
+    ):  # type: (...) -> int | bool | float | str | None
         """
         running 以解释方式的运行所有代码，
         并返回这些代码在运行时的返回值
@@ -631,6 +632,9 @@ class CodeRunner:
                 是否检查这些代码是否返回值。
                 如果为真且没有返回值，则抛出异常。
                 默认值为真
+            variables (dict[str, int | bool | float | str], optional):
+                运行代码前要预先初始化的变量。
+                默认值为空字典
             interact (GameInteract, optional):
                 用于与 Minecraft 进行交互的接口。
                 默认值为 EMPTY_GAME_INTERACT
@@ -644,7 +648,7 @@ class CodeRunner:
         """
         self._interact = interact
         self._builtins = builtins
-        self._variables = {}
+        self._variables = variables.copy()
         self._return = None
 
         try:
