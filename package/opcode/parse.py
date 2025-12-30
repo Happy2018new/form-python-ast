@@ -569,6 +569,7 @@ class CodeParser:
                 [],
             )
         ]
+        self._validate_next_line(ptr, False)
 
         while True:
             sub_ptr = self.reader.pointer()
