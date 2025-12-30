@@ -12,6 +12,7 @@
   - [与游戏进行交互](#与游戏进行交互)
   - [表达式、括号和强制类型转换](#表达式括号和强制类型转换)
   - [语句](#语句)
+  - [教程](#教程)
 
 
 
@@ -181,12 +182,10 @@ if {func, game.has_tag('@s', 'square:helper')}:
         return '000' + str(number)
     elif number >= 10:
         return '0000' + str(number)
-    elif number >= 1:
+    elif number >= 0:
         return '00000' + str(number)
     fi
 fi
-
-return '000000'
 ```
 
 另外，如果你有一些数学头脑，<br/>
@@ -256,3 +255,8 @@ return '000000'
 
 ## 语句
 另见 [docs/statement.md](./docs/statement.md)
+
+
+
+## 教程
+另见 [docs/tutorial.md](./docs/tutorial.md)
