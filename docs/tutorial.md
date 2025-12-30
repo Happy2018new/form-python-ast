@@ -279,18 +279,18 @@ if 0 <= number:
 ```python
 number = 233
 
-if 0 <= number:
-    return '00000' + str(number)
-elif 10 <= number:
-    return '0000' + str(number)
-elif 100 <= number:
-    return '000' + str(number)
-elif 1000 <= number:
-    return '00' + str(number)
+if 100000 <= number:
+    return str(number)
 elif 10000 <= number:
     return '0' + str(number)
-elif 100000 <= number:
-    return str(number)
+elif 1000 <= number:
+    return '00' + str(number)
+elif 100 <= number:
+    return '000' + str(number)
+elif 10 <= number:
+    return '0000' + str(number)
+elif 0 <= number:
+    return '00000' + str(number)
 fi
 ```
 
