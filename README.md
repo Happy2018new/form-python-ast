@@ -13,6 +13,12 @@
   - [表达式、括号和强制类型转换](#表达式括号和强制类型转换)
   - [语句](#语句)
   - [教程](#教程)
+- [快速上手](#快速上手)
+- [性能](#性能)
+  - [概述](#概述-2)
+  - [测试用例一](#测试用例一)
+  - [测试用例二](#测试用例二)
+  - [测试用例三](#测试用例三)
 
 
 
@@ -260,3 +266,161 @@ return '000000'
 
 ## 教程
 另见 [docs/tutorial.md](./docs/tutorial.md)
+
+
+
+
+
+# 快速上手
+使用版本至少达到 **2.7** 的 **Python** 运行下面的代码。
+```python
+# -*- coding: utf-8 -*-
+
+import package
+
+code = """
+repeat = 6
+total = 2*repeat-1
+
+for i, repeat:
+    star = 2*i + 1
+    space = int((total-star)/2)
+    line = ' '*space + '*'*star + ' '*space
+    {func, print(line)}
+rof
+
+for i, repeat-1:
+    star = 2*(repeat-(i+1)) - 1
+    space = int((total-star)/2)
+    line = ' '*space + '*'*star + ' '*space
+    {func, print(line)}
+rof
+
+return 'SUCCESS'
+"""
+
+
+def print_func(*args):  # type: (...) -> int
+    print(*args)
+    return 0
+
+
+try:
+    parser = package.CodeParser(code).parse()
+    builtins = package.BuiltInFunction(static={"print": print_func})
+    runner = package.CodeRunner(parser.code_block)
+    print(runner.running(builtins=builtins))
+except Exception as e:
+    print(e)
+```
+
+如果一切工作正常，您的控制台将打印下面的行。
+```python
+     *     
+    ***    
+   *****   
+  *******  
+ ********* 
+***********
+ ********* 
+  *******  
+   *****   
+    ***    
+     *     
+SUCCESS
+```
+
+这一部分指定了要让该编程语言运行的代码。
+```python
+code = """
+repeat = 6
+total = 2*repeat-1
+
+for i, repeat:
+    star = 2*i + 1
+    space = int((total-star)/2)
+    line = ' '*space + '*'*star + ' '*space
+    {func, print(line)}
+rof
+
+for i, repeat-1:
+    star = 2*(repeat-(i+1)) - 1
+    space = int((total-star)/2)
+    line = ' '*space + '*'*star + ' '*space
+    {func, print(line)}
+rof
+
+return 'SUCCESS'
+"""
+```
+
+您可以修改它以让该编程语言运行其他代码。
+
+另，因本项目有着详尽的注释，故本处不再描述您如何设置游戏交互相关的函数。<br/>
+这意味着您更被推荐通过阅读注释来自行探索本编程语言所具有的其他细节。
+
+
+
+
+
+# 性能
+## 概述
+下方所有测试都是在该中央处理器搭载的个人笔记本电脑进行的。<br/>
+并且，所有数据都最多精确到小数点后两位，并采用四舍五入处理。
+
+```
+Intel(R) Core(TM) i7-14650HX
+
+基准速度:	2.20 GHz
+插槽:	1
+内核:	16
+逻辑处理器:	24
+虚拟化:	已启用
+
+L1 缓存:	1.4 MB
+L2 缓存:	24.0 MB
+L3 缓存:	30.0 MB
+```
+
+
+
+## 测试用例一
+```python
+1
+```
+
+| 解释器      | 0.05s 内解析次数 | 0.05s 内运行次数 | 1s 内运行次数 | 单次运行的操作次数（预估） | 操作次数/秒 |
+| ----------- | ---------------- | ---------------- | ------------- | -------------------------- | ----------- |
+| Python 3.14 | 3239.32          | 101956.03        | 2039120.6     | 1.0                        | 2.04 M/s    |
+| Python 2.7  | 1560.23          | 38012.85         | 760257.0      | 1.0                        | 0.76 M/s    |
+| PyPy 2.7    | 3950.20          | 1319453.15       | 26389063.0    | 1.0                        | 26.39 M/s   |
+
+
+
+## 测试用例二
+```python
+1+1
+```
+
+| 解释器      | 0.05s 内解析次数 | 0.05s 内运行次数 | 1s 内运行次数 | 单次运行的操作次数（预估） | 操作次数/秒 |
+| ----------- | ---------------- | ---------------- | ------------- | -------------------------- | ----------- |
+| Python 3.14 | 2208.50          | 65268.65         | 1305373.0     | 1.0                        | 1.31 M/s    |
+| Python 2.7  | 1113.45          | 25006.05         | 500121.0      | 1.0                        | 0.50 M/s    |
+| PyPy 2.7    | 3368.85          | 506609.18        | 10132183.6    | 1.0                        | 10.13 M/s   |
+
+
+
+## 测试用例三
+```python
+total=0
+for i, 100:
+    total=total+i
+rof
+return total
+```
+
+| 解释器      | 0.05s 内解析次数 | 0.05s 内运行次数 | 1s 内运行次数 | 单次运行的操作次数（预估） | 操作次数/秒 |
+| ----------- | ---------------- | ---------------- | ------------- | -------------------------- | ----------- |
+| Python 3.14 | 432.43           | 731.09           | 14621.8       | 102.0                      | 1.49 M/s    |
+| Python 2.7  | 239.04           | 323.26           | 6465.2        | 102.0                      | 0.66 M/s    |
+| PyPy 2.7    | 1364.96          | 6633.33          | 132666.6      | 102.0                      | 13.53 M/s   |
