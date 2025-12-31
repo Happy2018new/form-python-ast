@@ -3,6 +3,11 @@
 - [教程一](#教程一)
 - [教程二](#教程二)
 - [教程三](#教程三)
+- [教程四](#教程四)
+- [教程五](#教程五)
+- [教程六](#教程六)
+- [教程七](#教程七)
+- [教程八](#教程八)
 
 
 
@@ -260,17 +265,67 @@ fi
 return result
 ```
 
-你会发现，在反转条件后，任何大于或等于 0 的 `number` 都会落入下面的条件中。
+你会发现，在反转条件后，任何大于或等于 0 的 `number` 都会落入下面的条件中。<br/>
+因此，其他条件不会被执行，所以代码总是给“数字”添加五个零。
+
 ```python
 if 0 <= number:
     result = '00000' + str(number)
 ```
 
-因此，其他条件不会被执行，所以代码总是给“数字”添加五个零。<br/>
-然而，如果不进行反转，而是从 `100000 <= number` 开始判断，则不会具有这个问题。
+然而，如果不进行反转，而是从 `100000 <= number` 开始判断，则不会具有这个问题。<br/>
+但是为什么这么做是有效的呢？让我们列表来观察一下。
 
-本处将不再赘述在反转前，代码为什么是有效的。<br/>
-读者应该发挥自己敏捷的思维，从而理解这个代码的意思。
+| number 的范围                         | 反转前命中的条件      | 反转后命中的条件  |
+| ------------------------------------- | --------------------- | ----------------- |
+| 100000 <= number and number <= 999999 | if 100000 <= number:  | elif 0 <= number: |
+| 10000 <= number and number <= 99999   | elif 10000 <= number: | elif 0 <= number: |
+| 1000 <= number and number <= 9999     | elif 1000 <= number:  | elif 0 <= number: |
+| 100 <= number and number <= 999       | elif 100 <= number:   | elif 0 <= number: |
+| 10 <= number and number <= 99         | elif 10 <= number:    | elif 0 <= number: |
+| 0 <= number and number <= 9           | elif 0 <= number:     | elif 0 <= number: |
+
+您将发现简化后的代码（也就是反转前的代码）与[教程一](#教程一)的代码的效果是相同的。<br/>
+并且您现在也可以理解为什么反转条件之后，代码将无法按预期正常工作。
+
+另外，下面的写法跟本例中的代码也是等效的。<br/>
+您很容易就能发现，下面的代码避免使用了 `elif` 关键字。<br/>
+这意味着下面的代码通过某种方式把 `elif` 通过 `if` 和 `else` 替代了。
+
+```python
+number = 233
+result = ''
+
+if 100000 <= number:
+    result = str(number)
+else:
+    if 10000 <= number:
+        result = '0' + str(number)
+    else:
+        if 1000 <= number:
+            result = '00' + str(number)
+        else:
+            if 100 <= number:
+                result = '000' + str(number)
+            else:
+                if 10 <= number:
+                    result = '0000' + str(number)
+                else:
+                    if 0 <= number:
+                        result = '00000' + str(number)
+                    fi
+                fi
+            fi
+        fi
+    fi
+fi
+
+
+return result
+```
+
+尽管上面的代码具有相同的作用，您在实际编程时也不应该使用它。<br/>
+很显然，这样的代码非常难以阅读，并且编写的时候也很容易出错。
 
 
 
@@ -295,3 +350,207 @@ fi
 ```
 
 您应该很容易看出区别，并且理解为什么可以这么做。
+
+
+
+# 教程四
+现在让我们在游戏内通过 `say` 命令输出一个三角形。<br/>
+类似于下面这种模式（这是一个直角三角形）。
+
+```python
+*
+***
+*****
+*******
+*********
+***********
+```
+
+我们可以使用下面的代码。
+```python
+repeat = 6
+star = -1
+
+for _, repeat:
+    star = star + 2
+    line = 'say ' + '*'*star
+    {command, line}
+rof
+```
+
+这段代码会按顺序依次执行下面的指令。
+```mcfunction
+say *
+say ***
+say *****
+say *******
+say *********
+say ***********
+```
+
+其中，变量 `repeat` 代表了三角形的行数。或者换句话说，它也代表最终要执行的指令的数量。<br/>
+变量 `star` 在会在每次循环执行时发生改变，它用于动态控制每个要执行的指令中的 `*` 的数量。
+
+您可以画一张表来进一步理解代码。<br/>
+这张表揭示了每轮循环结束时，各个变量的状态。
+
+| 循环轮次 | star 的值 | line 的值         |
+| -------- | --------- | ----------------- |
+| 1        | 1         | 'say *'           |
+| 2        | 3         | 'say ***'         |
+| 3        | 5         | 'say *****'       |
+| 4        | 7         | 'say *******'     |
+| 5        | 9         | 'say *********'   |
+| 6        | 11        | 'say ***********' |
+
+您会发现在每轮循环结束时，变量 `star` 的值和变量 `line` 中的 `*` 的数量是相同的。<br/>
+这意味着我们实际上是通过变量 `star` 来控制每轮循环时变量 `line` 中的 `*` 的数量。
+
+另外，您可以注意到该代码没有**返回语句**。这个问题在本例中不是特别重要，您只需要着重关注指令到底是如何构造和执行的。<br/>
+需要注意的是，在每轮循环即将结束前，我们执行了 **Command** 语句，也就是下方的这个语句。它用于执行变量 `line` 指示的指令。
+```python
+{command, line}
+```
+
+
+
+# 教程五
+基于[教程四](#教程四)，如果我们希望得到诸如下方的这样的三角形呢？
+```python
+*
+***
+*****
+*******
+*********
+***********
+*********
+*******
+*****
+***
+*
+```
+
+相应的代码实际上如下。
+```python
+repeat = 6
+star = -1
+
+for _, repeat:
+    star = star + 2
+    line = 'say ' + '*'*star
+    {command, line}
+rof
+
+for _, repeat-1:
+    star = star - 2
+    line = 'say ' + '*'*star
+    {command, line}
+rof
+```
+
+它将依次执行下面的命令。
+```mcfunction
+say *
+say ***
+say *****
+say *******
+say *********
+say ***********
+say *********
+say *******
+say *****
+say ***
+say *
+```
+
+我们不会解释上面的代码为何可行。<br/>
+请您发挥您的聪明才智，自行探索。
+
+
+
+# 教程六
+```python
+repeat = 6
+star = 2*repeat-1
+space = 0
+
+for _, repeat:
+    line = 'say ' + ' '*space + '*'*star + ' '*space
+    star = star - 2
+    space = space + 1
+    {command, line}
+rof
+```
+
+上面的代码最终会依次执行下面的指令。
+```mcfunction
+say ***********
+say  *********
+say   *******
+say    *****
+say     ***
+say      *
+```
+
+
+
+# 教程七
+```python
+repeat = 6
+star = 1
+space = repeat-1
+
+for _, repeat:
+    line = 'say ' + ' '*space + '*'*star + ' '*space
+    star = star + 2
+    space = space - 1
+    {command, line}
+rof
+```
+
+上面的代码最终会依次执行下面的指令。
+```mcfunction
+say      *
+say     ***
+say    *****
+say   *******
+say  *********
+say ***********
+```
+
+
+
+# 教程八
+```python
+repeat = 6
+total = 2*repeat-1
+
+for i, repeat:
+    star = 2*i + 1
+    space = int((total-star)/2)
+    line = 'say ' + ' '*space + '*'*star + ' '*space
+    {command, line}
+rof
+
+for i, repeat-1:
+    star = 2*(repeat-(i+1)) - 1
+    space = int((total-star)/2)
+    line = 'say ' + ' '*space + '*'*star + ' '*space
+    {command, line}
+rof
+```
+
+上面的代码最终会依次执行下面的指令。
+```mcfunction
+say      *
+say     ***
+say    *****
+say   *******
+say  *********
+say ***********
+say  *********
+say   *******
+say    *****
+say     ***
+say      *
+```
