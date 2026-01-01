@@ -302,8 +302,8 @@ return 'SUCCESS'
 """
 
 
-def print_func(*args):  # type: (...) -> int
-    print(*args)
+def print_func(value):  # type: (...) -> int
+    print(value)
     return 0
 
 
