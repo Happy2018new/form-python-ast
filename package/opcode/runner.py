@@ -55,6 +55,11 @@ from ..expression.baisc import (
     ExpressionCommand,
 )
 
+try:
+    range = xrange  # type: ignore
+except Exception:
+    pass
+
 STATES_KEEP_RUNNING = 0
 STATES_LOOP_CONTINUE = 1
 STATES_LOOP_BREAK = 2

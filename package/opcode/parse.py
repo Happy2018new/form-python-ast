@@ -38,6 +38,11 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_ROF,
 )
 
+try:
+    range = xrange  # type: ignore
+except Exception:
+    pass
+
 ORD_ZERO, ORD_NINE = ord("0"), ord("9")
 DEFAULT_EMPTY_EXCEPTION = Exception()
 

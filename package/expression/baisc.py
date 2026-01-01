@@ -32,6 +32,11 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_FLOAT,
 )
 
+try:
+    range = xrange  # type: ignore
+except Exception:
+    pass
+
 
 class ExpressionNormal(ExpressionElement):
     """

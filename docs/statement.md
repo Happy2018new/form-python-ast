@@ -873,7 +873,7 @@ for _, r*2:
     temp = a
     a = b
     b = temp + b
-    total = total+a
+    total = total + a
 rof
 ```
 
@@ -959,7 +959,7 @@ for _, r*2:
     a = b
     b = temp + b
     if a/2 == int(a/2):
-        total = total+a
+        total = total + a
     fi
 rof
 ```
@@ -990,7 +990,7 @@ for _, r*2:
     if a/2 != int(a/2):
         continue
     fi
-    total = total+a
+    total = total + a
 rof
 ```
 
@@ -1018,7 +1018,7 @@ for _, r*2:
     temp = a
     a = b
     b = temp + b
-    total = total+a
+    total = total + a
     if total > 50000:
         break
     fi
@@ -1062,7 +1062,7 @@ for _, r*2:
     temp = a
     a = b
     b = temp + b
-    total = total+a
+    total = total + a
 
     if total > 50000:
         total = total + 0
