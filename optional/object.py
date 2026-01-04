@@ -178,7 +178,8 @@ class ObjectManager:
     def finalise(self, ptr):  # type: (int) -> bool
         """
         finalise 终结了 ptr 所指向对象的固定态。
-        这意味着 ptr 所指向的对象将可以被释放
+        这意味着 ptr 所指向的对象将可以被释放。
+        另，如果目标对象未被固定，也不会出现错误
 
         Args:
             ptr (int):
