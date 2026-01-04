@@ -18,7 +18,11 @@ REF_TYPE_INT = 0
 REF_TYPE_BOOL = 1
 REF_TYPE_FLOAT = 2
 REF_TYPE_STR = 3
-REF_TYPE_UNKNOWN = 4
+REF_TYPE_SLICE = 4
+REF_TYPE_MAP = 5
+REF_TYPE_TUPLE = 6
+REF_TYPE_SET = 7
+REF_TYPE_UNKNOWN = 8
 
 
 class ObjectManager:
@@ -279,6 +283,14 @@ class ObjectManager:
             return REF_TYPE_FLOAT
         elif isinstance(obj, str):
             return REF_TYPE_STR
+        elif isinstance(obj, list):
+            return REF_TYPE_SLICE
+        elif isinstance(obj, dict):
+            return REF_TYPE_MAP
+        elif isinstance(obj, tuple):
+            return REF_TYPE_TUPLE
+        elif isinstance(obj, set):
+            return REF_TYPE_SET
         else:
             return REF_TYPE_UNKNOWN
 
