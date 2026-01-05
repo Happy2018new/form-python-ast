@@ -23,6 +23,24 @@ class Strings:
         """
         self._manager = manager
 
+    def _validate(self, string):  # type: (Any) -> str
+        """_validate 验证给定的对象是否为字符串
+
+        Args:
+            string (Any): 待验证的对象
+
+        Raises:
+            Exception:
+                如果给定的对象不是字符串，则抛出相应的错误
+
+        Returns:
+            str:
+                返回给定的对象，当且仅当它是字符串时
+        """
+        if not isinstance(string, str):
+            raise Exception("strings: Target object is not a string")
+        return string
+
     def cast(self, ptr):  # type: (int) -> str
         """
         cast 将 ptr 指向的对象强制转换为字符串
@@ -44,7 +62,7 @@ class Strings:
         Returns:
             int: 字符串的长度
         """
-        return len(string)
+        return len(self._validate(string))
 
     def sub(self, string, start, end):  # type: (str, int, int) -> str
         """sub 返回字符串的子字符串
@@ -57,7 +75,7 @@ class Strings:
         Returns:
             int: 产生的子字符串
         """
-        return string[start:end]
+        return self._validate(string)[start:end]
 
     def encode(self, string):  # type: (str) -> int | str
         """encode 将字符串按 UTF-8 编码
@@ -70,7 +88,7 @@ class Strings:
                 如果返回了一个整数，则它是一个指向了 bytes 的指针；
                 否则，返回了一个字符串，表示其在较低 Python 版本中的结果
         """
-        result = string.encode(encoding="utf-8")
+        result = self._validate(string).encode(encoding="utf-8")
         if isinstance(result, str):
             return result
         return self._manager.ref(result)
@@ -87,12 +105,12 @@ class Strings:
             str: 解码所得的字符串
         """
         if isinstance(ptr_or_str, int):
-            return self._manager.deref(ptr_or_str).decode(encoding="utf-8")
-
-        temp = ptr_or_str  # type: Any
-        obj = temp  # type: bytes
-
-        return obj.decode(encoding="utf-8")
+            obj_a = self._manager.deref(ptr_or_str)  # type: bytes
+            return obj_a.decode(encoding="utf-8")
+        else:
+            temp = ptr_or_str  # type: Any
+            obj_b = temp  # type: bytes
+            return obj_b.decode(encoding="utf-8")
 
     def join(self, string, slice_ptr):  # type: (str, int) -> str
         """
@@ -115,7 +133,7 @@ class Strings:
         obj = self._manager.deref(slice_ptr)
         if not isinstance(obj, list):
             raise Exception("strings.join: Given ptr of slice is not a slice")
-        return string.join(obj)
+        return self._validate(string).join(obj)
 
     def split(
         self, string, sep=None, maxsplit=-1
@@ -137,7 +155,7 @@ class Strings:
         Returns:
             int: 所产生的切片的指针
         """
-        return self._manager.ref(string.split(sep, maxsplit))
+        return self._manager.ref(self._validate(string).split(sep, maxsplit))
 
     def rsplit(
         self, string, sep=None, maxsplit=-1
@@ -161,7 +179,7 @@ class Strings:
         Returns:
             int: 所产生的切片的指针
         """
-        return self._manager.ref(string.rsplit(sep, maxsplit))
+        return self._manager.ref(self._validate(string).rsplit(sep, maxsplit))
 
     def equalfold(self, string_a, string_b):  # type: (str, str) -> bool
         """
@@ -174,7 +192,7 @@ class Strings:
         Returns:
             bool: 两个字符串在忽略大小写的情况下是否相等
         """
-        return string_a.lower() == string_b.lower()
+        return self._validate(string_a).lower() == self._validate(string_b).lower()
 
     def build_func(
         self,
@@ -193,60 +211,80 @@ class Strings:
         funcs["strings.cast"] = self.cast
         funcs["strings.length"] = self.length
         funcs["strings.sub"] = self.sub
-        funcs["strings.capitalize"] = lambda string: str(string).capitalize()
-        funcs["strings.center"] = lambda string, width, fillchar=" ": str(
+        funcs["strings.capitalize"] = lambda string: self._validate(string).capitalize()
+        funcs["strings.center"] = lambda string, width, fillchar=" ": self._validate(
             string
         ).center(width, fillchar)
         funcs["strings.encode"] = self.encode
         funcs["strings.decode"] = self.decode
-        funcs["strings.startswith"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).startswith(prefix, start, end)
-        funcs["strings.endswith"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).endswith(prefix, start, end)
-        funcs["strings.find"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).find(prefix, start, end)
-        funcs["strings.rfind"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).rfind(prefix, start, end)
-        funcs["strings.index"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).index(prefix, start, end)
-        funcs["strings.rindex"] = lambda string, prefix, start=None, end=None: str(
-            string
-        ).rindex(prefix, start, end)
-        funcs["strings.isalnum"] = lambda string: str(string).isalnum()
-        funcs["strings.isalpha"] = lambda string: str(string).isalpha()
-        funcs["strings.isascii"] = lambda string: str(string).isascii()
-        funcs["strings.isdecimal"] = lambda string: str(string).isdecimal()
-        funcs["strings.isdigit"] = lambda string: str(string).isdigit()
-        funcs["strings.islower"] = lambda string: str(string).islower()
-        funcs["strings.isnumeric"] = lambda string: str(string).isnumeric()
-        funcs["strings.isspace"] = lambda string: str(string).isspace()
-        funcs["strings.istitle"] = lambda string: str(string).istitle()
-        funcs["strings.isupper"] = lambda string: str(string).isupper()
+        funcs["strings.startswith"] = (
+            lambda string, prefix, start=None, end=None: self._validate(
+                string
+            ).startswith(prefix, start, end)
+        )
+        funcs["strings.endswith"] = (
+            lambda string, prefix, start=None, end=None: self._validate(
+                string
+            ).endswith(prefix, start, end)
+        )
+        funcs["strings.find"] = (
+            lambda string, prefix, start=None, end=None: self._validate(string).find(
+                prefix, start, end
+            )
+        )
+        funcs["strings.rfind"] = (
+            lambda string, prefix, start=None, end=None: self._validate(string).rfind(
+                prefix, start, end
+            )
+        )
+        funcs["strings.index"] = (
+            lambda string, prefix, start=None, end=None: self._validate(string).index(
+                prefix, start, end
+            )
+        )
+        funcs["strings.rindex"] = (
+            lambda string, prefix, start=None, end=None: self._validate(string).rindex(
+                prefix, start, end
+            )
+        )
+        funcs["strings.isalnum"] = lambda string: self._validate(string).isalnum()
+        funcs["strings.isalpha"] = lambda string: self._validate(string).isalpha()
+        funcs["strings.isascii"] = lambda string: self._validate(string).isascii()
+        funcs["strings.isdecimal"] = lambda string: self._validate(string).isdecimal()
+        funcs["strings.isdigit"] = lambda string: self._validate(string).isdigit()
+        funcs["strings.islower"] = lambda string: self._validate(string).islower()
+        funcs["strings.isnumeric"] = lambda string: self._validate(string).isnumeric()
+        funcs["strings.isspace"] = lambda string: self._validate(string).isspace()
+        funcs["strings.istitle"] = lambda string: self._validate(string).istitle()
+        funcs["strings.isupper"] = lambda string: self._validate(string).isupper()
         funcs["strings.join"] = self.join
-        funcs["strings.ljust"] = lambda string, width, fillchar=" ": str(string).ljust(
-            width, fillchar
-        )
-        funcs["strings.rjust"] = lambda string, width, fillchar=" ": str(string).rjust(
-            width, fillchar
-        )
-        funcs["strings.lower"] = lambda string: str(string).lower()
-        funcs["strings.upper"] = lambda string: str(string).upper()
-        funcs["strings.lstrip"] = lambda string, chars=None: str(string).lstrip(chars)
-        funcs["strings.rstrip"] = lambda string, chars=None: str(string).rstrip(chars)
-        funcs["strings.strip"] = lambda string, chars=None: str(string).strip(chars)
-        funcs["strings.replace"] = lambda string, old, new, count=-1: str(
+        funcs["strings.ljust"] = lambda string, width, fillchar=" ": self._validate(
+            string
+        ).ljust(width, fillchar)
+        funcs["strings.rjust"] = lambda string, width, fillchar=" ": self._validate(
+            string
+        ).rjust(width, fillchar)
+        funcs["strings.lower"] = lambda string: self._validate(string).lower()
+        funcs["strings.upper"] = lambda string: self._validate(string).upper()
+        funcs["strings.lstrip"] = lambda string, chars=None: self._validate(
+            string
+        ).lstrip(chars)
+        funcs["strings.rstrip"] = lambda string, chars=None: self._validate(
+            string
+        ).rstrip(chars)
+        funcs["strings.strip"] = lambda string, chars=None: self._validate(
+            string
+        ).strip(chars)
+        funcs["strings.replace"] = lambda string, old, new, count=-1: self._validate(
             string
         ).replace(old, new, count)
         funcs["strings.split"] = self.split
         funcs["strings.rsplit"] = self.rsplit
-        funcs["strings.swapcase"] = lambda string: str(string).swapcase()
-        funcs["strings.title"] = lambda string: str(string).title()
-        funcs["strings.zfill"] = lambda string, width: str(string).zfill(width)
+        funcs["strings.swapcase"] = lambda string: self._validate(string).swapcase()
+        funcs["strings.title"] = lambda string: self._validate(string).title()
+        funcs["strings.zfill"] = lambda string, width: self._validate(string).zfill(
+            width
+        )
         funcs["strings.equalfold"] = self.equalfold
 
         for key, value in funcs.items():
