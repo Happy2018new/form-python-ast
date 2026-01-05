@@ -14,6 +14,7 @@ from .random import Random
 from .json import JSON
 from .binascii import Binascii
 from .datetime import TimeDelta, Time, Date, DateTime
+from .base64 import Base64
 
 """
 Form Python Ast & Optional
