@@ -9,6 +9,8 @@ import json
 from .object import ObjectManager
 from .checker.checker import check_object
 
+IS_PRODUCTION_ENV = True
+
 
 class Reflect:
     """
@@ -26,7 +28,7 @@ class Reflect:
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
-        self._debug = False
+        self._debug = not IS_PRODUCTION_ENV
 
     def cast(self, ptr_a, ptr_b):  # type: (int, int) -> int
         """
@@ -839,25 +841,14 @@ class Reflect:
         except Exception:
             return 0
 
-    def _unsafe(self, enable):  # type: (bool) -> bool
+    def unsafe(self):  # type: () -> bool
         """
-        _unsafe is a private method and just for debug.
-        Please never use it in production environment.
-
-        Args:
-            enable (str): ...
-
-        Raises:
-            Exception:
-                When the given argument is not a bool.
+        unsafe 返回当前环境是否是生产环境
 
         Returns:
-            bool: Always return True
+            bool: 当前环境是否是生产环境
         """
-        if not isinstance(enable, bool):
-            raise Exception("unsafe: Given argument must be a bool")
-        self._debug = enable
-        return True
+        return self._debug
 
     def build_func(
         self,
@@ -915,7 +906,7 @@ class Reflect:
         funcs["reflect.max"] = self.max
         funcs["reflect.min"] = self.min
         funcs["reflect.sum"] = self.sum
-        funcs["reflect.unsafe"] = self._unsafe
+        funcs["reflect.unsafe"] = self.unsafe
 
         for key, value in funcs.items():
             origin[key] = value
