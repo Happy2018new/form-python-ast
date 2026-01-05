@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
 import datetime
-from .object import ObjectManager
+from .lib_object import ObjectManager
 
 
 class TimeDelta:

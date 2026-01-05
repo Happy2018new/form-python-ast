@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import copy
 import json
-from .object import ObjectManager
+from .lib_object import ObjectManager
 from .checker.checker import check_object
 
 IS_PRODUCTION_ENV = True

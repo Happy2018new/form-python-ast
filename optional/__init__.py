@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from .object import ObjectManager
-from .reflect import Reflect
-from .slices import Slices
-from .maps import Maps
-from .tuple import Tuple
-from .set import Set
-from .strings import Strings
-from .uuid import UUID
-from .time import StructTime, Time
-from .math import Math
-from .random import Random
-from .json import JSON
-from .binascii import Binascii
-from .datetime import TimeDelta, Time, Date, DateTime
-from .base64 import Base64
+from .lib_object import ObjectManager
+from .lib_reflect import Reflect
+from .lib_slices import Slices
+from .lib_maps import Maps
+from .lib_tuple import Tuple
+from .lib_set import Set
+from .lib_strings import Strings
+from .lib_uuid import UUID
+from .lib_time import StructTime, Time
+from .lib_math import Math
+from .lib_random import Random
+from .lib_json import JSON
+from .lib_binascii import Binascii
+from .lib_datetime import TimeDelta, Time, Date, DateTime
+from .lib_base64 import Base64
 
 """
 Form Python Ast & Optional

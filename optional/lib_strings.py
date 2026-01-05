@@ -4,7 +4,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any, Callable
 
-from .object import ObjectManager
+from .lib_object import ObjectManager
 
 
 class Strings:
