@@ -176,15 +176,15 @@ strings.equalfold (= EqualFlod)
 
 
 uuid.new
-uuid.cast
 uuid.format
 uuid.string
 uuid.bytes
 uuid.bytes_le
 uuid.hex
+uuid.from_string
 uuid.from_bytes
 uuid.from_bytes_le
-uuid.from_str
+uuid.from_hex
 
 
 

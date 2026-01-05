@@ -104,7 +104,7 @@ class Slices:
         obj = self._manager.deref(ptr)
         if not isinstance(obj, list):
             raise Exception("slices.format: Target object is not a slice")
-        return str(obj)
+        return obj.__repr__()
 
     def append(self, slice_ptr, value_ptr):  # type: (int, int) -> bool
         """append 向一个切片追加新的元素

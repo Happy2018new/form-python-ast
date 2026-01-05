@@ -103,7 +103,7 @@ class Maps:
         obj = self._manager.deref(ptr)
         if not isinstance(obj, dict):
             raise Exception("maps.format: Target object is not a map")
-        return str(obj)
+        return obj.__repr__()
 
     def exist(self, map_ptr, key_ptr):  # type: (int, int) -> bool
         """exist 检查映射中是否存在指定的键

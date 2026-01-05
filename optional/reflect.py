@@ -108,7 +108,7 @@ class Reflect:
                 否则失败，那么返回 0
         """
         try:
-            return self._manager.ref(str(self._manager.deref(ptr)))
+            return self._manager.ref(self._manager.deref(ptr).__repr__())
         except Exception:
             return 0
 

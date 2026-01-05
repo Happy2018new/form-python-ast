@@ -78,7 +78,7 @@ class Tuple:
         obj = self._manager.deref(ptr)
         if not isinstance(obj, tuple):
             raise Exception("tuple.format: Target object is not a tuple")
-        return str(obj)
+        return obj.__repr__()
 
     def get(self, ptr, index):  # type: (int, int) -> int
         """get 从元组中获取指定索引的元素

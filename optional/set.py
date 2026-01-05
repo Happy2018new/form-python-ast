@@ -96,7 +96,7 @@ class Set:
         obj = self._manager.deref(ptr)
         if not isinstance(obj, set):
             raise Exception("set.format: Target object is not a set")
-        return str(obj)
+        return obj.__repr__()
 
     def exist(self, set_ptr, element_ptr):  # type: (int, int) -> bool
         """exist 检查元素是否存在于集合中
