@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 import random
 import uuid
 import time
+import datetime
 
 MIN_INT32 = -(2**31)
 MAX_INT32 = 2**31 - 1
@@ -26,7 +27,11 @@ REF_TYPE_TUPLE = 6
 REF_TYPE_SET = 7
 REF_TYPE_UUID = 8
 REF_TYPE_STRUCT_TIME = 9
-REF_TYPE_UNKNOWN = 10
+REF_TYPE_DATETIME_TIMEDELTA = 10
+REF_TYPE_DATETIME_TIME = 11
+REF_TYPE_DATETIME_DATE = 12
+REF_TYPE_DATETIME_DATETIME = 13
+REF_TYPE_UNKNOWN = 14
 
 
 class ObjectManager:
@@ -283,17 +288,36 @@ class ObjectManager:
                     - REF_TYPE_BOOL: 布尔值
                     - REF_TYPE_FLOAT: 浮点数
                     - REF_TYPE_STR: 字符串
+                    - REF_TYPE_SLICE: 切片
+                    - REF_TYPE_MAP: 映射
+                    - REF_TYPE_TUPLE: 元组
+                    - REF_TYPE_SET: 集合
+                    - REF_TYPE_UUID: UUID
+                    - REF_TYPE_STRUCT_TIME: 结构化时间
+                    - REF_TYPE_DATETIME_TIMEDELTA: 时间差
+                    - REF_TYPE_DATETIME_TIME: 时间
+                    - REF_TYPE_DATETIME_DATE: 日期
+                    - REF_TYPE_DATETIME_DATETIME: DateTime
                     - REF_TYPE_UNKNOWN: 其他类型
         """
         if ptr not in self._mapping:
             raise Exception("ref_type: Invalid address or nil pointer dereference")
-
         obj = self._mapping[ptr]
+
         if isinstance(obj, uuid.UUID):
             return REF_TYPE_UUID
         elif isinstance(obj, time.struct_time):
             return REF_TYPE_STRUCT_TIME
-        elif isinstance(obj, int):
+        elif isinstance(obj, datetime.timedelta):
+            return REF_TYPE_DATETIME_TIMEDELTA
+        elif isinstance(obj, datetime.time):
+            return REF_TYPE_DATETIME_TIME
+        elif isinstance(obj, datetime.date):
+            return REF_TYPE_DATETIME_DATE
+        elif isinstance(obj, datetime.datetime):
+            return REF_TYPE_DATETIME_DATETIME
+
+        if isinstance(obj, int):
             return REF_TYPE_INT
         elif isinstance(obj, bool):
             return REF_TYPE_BOOL

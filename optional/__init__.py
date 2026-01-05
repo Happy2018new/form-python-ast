@@ -13,6 +13,7 @@ from .math import Math
 from .random import Random
 from .json import JSON
 from .binascii import Binascii
+from .datetime import TimeDelta, Time, Date, DateTime
 
 """
 Form Python Ast & Optional

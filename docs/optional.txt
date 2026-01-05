@@ -304,12 +304,10 @@ binascii.hexlify
 datetime_datetime.new
 datetime_datetime.now
 datetime_datetime.format
-datetime_datetime.astimezone
 datetime_datetime.combine
 datetime_datetime.ctime
 datetime_datetime.date
 datetime_datetime.day
-datetime_datetime.dst
 datetime_datetime.fromordinal
 datetime_datetime.fromtimestamp
 datetime_datetime.hour
@@ -328,20 +326,14 @@ datetime_datetime.strftime
 datetime_datetime.strptime
 datetime_datetime.time
 datetime_datetime.timetuple
-datetime_datetime.timetz
 datetime_datetime.today
 datetime_datetime.toordinal
-datetime_datetime.tzinfo
-datetime_datetime.tzname
-datetime_datetime.utcoffset
-datetime_datetime.utctimetuple
 datetime_datetime.weekday
 datetime_datetime.greater
 datetime_datetime.less
 datetime_datetime.greater_equal
 datetime_datetime.less_equal
 datetime_datetime.equal
-datetime_datetime.not_equal
 datetime_datetime.add_delta
 datetime_datetime.remove_delta
 datetime_datetime.remove_datetime
@@ -371,14 +363,12 @@ datetime_date.less
 datetime_date.greater_equal
 datetime_date.less_equal
 datetime_date.equal
-datetime_date.not_equal
 datetime_date.add_delta
 datetime_date.remove_delta
 datetime_date.remove_date
 
 datetime_time.new
 datetime_time.format
-datetime_time.dst
 datetime_time.hour
 datetime_time.isoformat
 datetime_time.max
@@ -389,9 +379,6 @@ datetime_time.replace
 datetime_time.resolution
 datetime_time.second
 datetime_time.strftime
-datetime_time.tzinfo
-datetime_time.tzname
-datetime_time.utcoffset
 datetime_time.greater
 datetime_time.less
 datetime_time.greater_equal
@@ -412,21 +399,13 @@ datetime_timedelta.greater
 datetime_timedelta.less
 datetime_timedelta.greater_equal
 datetime_timedelta.less_equal
-datetime_timedelta.equal
-datetime_timedelta.not_equal
+datetime_timedelta.equal 
 datetime_timedelta.add
 datetime_timedelta.remove
 datetime_timedelta.times
 datetime_timedelta.divide
 datetime_timedelta.negative
 datetime_timedelta.abs
-
-datetime_tzinfo.new
-datetime_tzinfo.format
-datetime_tzinfo.dst
-datetime_tzinfo.fromutc
-datetime_tzinfo.tzname
-datetime_tzinfo.utcoffset
 
 
 
