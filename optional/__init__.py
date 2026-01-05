@@ -8,7 +8,7 @@ from .lib_tuple import Tuple
 from .lib_set import Set
 from .lib_strings import Strings
 from .lib_uuid import UUID
-from .lib_time import StructTime, Time
+from .lib_time import StructTime, Time as CommonTime
 from .lib_math import Math
 from .lib_random import Random
 from .lib_json import JSON
