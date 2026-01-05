@@ -5,6 +5,8 @@ if TYPE_CHECKING:
     from typing import Any, Callable
 
 import random
+import uuid
+import time
 
 MIN_INT32 = -(2**31)
 MAX_INT32 = 2**31 - 1
@@ -22,7 +24,9 @@ REF_TYPE_SLICE = 4
 REF_TYPE_MAP = 5
 REF_TYPE_TUPLE = 6
 REF_TYPE_SET = 7
-REF_TYPE_UNKNOWN = 8
+REF_TYPE_UUID = 8
+REF_TYPE_STRUCT_TIME = 9
+REF_TYPE_UNKNOWN = 10
 
 
 class ObjectManager:
@@ -275,7 +279,11 @@ class ObjectManager:
             raise Exception("ref_type: Invalid address or nil pointer dereference")
 
         obj = self._mapping[ptr]
-        if isinstance(obj, int):
+        if isinstance(obj, uuid.UUID):
+            return REF_TYPE_UUID
+        elif isinstance(obj, time.struct_time):
+            return REF_TYPE_STRUCT_TIME
+        elif isinstance(obj, int):
             return REF_TYPE_INT
         elif isinstance(obj, bool):
             return REF_TYPE_BOOL

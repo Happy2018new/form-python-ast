@@ -7,6 +7,8 @@ from .maps import Maps
 from .tuple import Tuple
 from .set import Set
 from .strings import Strings
+from .uuid import UUID
+from .time import StructTime, Time
 
 """
 Form Python Ast & Optional
