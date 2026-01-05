@@ -9,6 +9,7 @@ from .set import Set
 from .strings import Strings
 from .uuid import UUID
 from .time import StructTime, Time
+from .math import Math
 
 """
 Form Python Ast & Optional
