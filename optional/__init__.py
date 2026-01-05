@@ -10,6 +10,7 @@ from .strings import Strings
 from .uuid import UUID
 from .time import StructTime, Time
 from .math import Math
+from .random import Random
 
 """
 Form Python Ast & Optional
