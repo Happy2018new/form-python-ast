@@ -5,6 +5,7 @@ object.release
 object.release_all
 object.pin
 object.finalise
+object.make_none
 object.is_ptr
 object.is_none
 object.raw_type

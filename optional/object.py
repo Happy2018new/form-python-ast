@@ -205,6 +205,16 @@ class ObjectManager:
         self._pinned.discard(ptr)
         return True
 
+    def make_none(self):  # type: () -> int
+        """
+        make_none 创建一个 None 对象，
+        并返回指向该对象的指针
+
+        Returns:
+            int: 新创建的对象的指针
+        """
+        return self.ref(None)
+
     def is_ptr(self, ptr):  # type: (int) -> bool
         """
         is_ptr 检查 ptr 是否为是一个指针
@@ -323,6 +333,7 @@ class ObjectManager:
         funcs["object.release_all"] = self.release_all
         funcs["object.pin"] = self.pin
         funcs["object.finalise"] = self.finalise
+        funcs["object.make_none"] = self.make_none
         funcs["object.is_ptr"] = self.is_ptr
         funcs["object.is_none"] = self.is_none
         funcs["object.raw_type"] = self.raw_type

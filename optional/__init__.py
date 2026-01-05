@@ -11,6 +11,7 @@ from .uuid import UUID
 from .time import StructTime, Time
 from .math import Math
 from .random import Random
+from .json import JSON
 
 """
 Form Python Ast & Optional
