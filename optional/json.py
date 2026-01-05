@@ -13,6 +13,8 @@ class JSON:
     JSON 提供了 JSON 相关的内置函数
     """
 
+    _manager = ObjectManager()
+
     def __init__(self, manager):  # type: (ObjectManager) -> None
         """初始化并返回一个新的 JSON
 

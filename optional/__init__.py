@@ -12,6 +12,7 @@ from .time import StructTime, Time
 from .math import Math
 from .random import Random
 from .json import JSON
+from .binascii import Binascii
 
 """
 Form Python Ast & Optional
