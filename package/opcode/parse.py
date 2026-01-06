@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .define import (
-    ConditionWithCode,
+    ConditionCodeBlock,
     ForLoopCodeBlock,
     OpcodeBase,
     OpcodeAssign,
@@ -568,7 +568,7 @@ class CodeParser:
                 解析所得的条件代码块
         """
         conditions = [
-            ConditionWithCode(
+            ConditionCodeBlock(
                 self._parse_expression(CONTEXT_PARSE_IF, True, False),
                 self._get_line_code(ptr, self.reader.pointer()),
                 [],
@@ -592,7 +592,7 @@ class CodeParser:
 
             if further[0].token_id == TOKEN_ID_KEY_WORD_ELIF:
                 conditions.append(
-                    ConditionWithCode(
+                    ConditionCodeBlock(
                         self._parse_expression(CONTEXT_PARSE_IF, True, False),
                         self._get_line_code(sub_ptr, self.reader.pointer()),
                         [],
@@ -605,7 +605,7 @@ class CodeParser:
                     'Else statement should use ":" after the expression',
                 )
                 conditions.append(
-                    ConditionWithCode(
+                    ConditionCodeBlock(
                         None, self._get_line_code(sub_ptr, self.reader.pointer()), []
                     )
                 )

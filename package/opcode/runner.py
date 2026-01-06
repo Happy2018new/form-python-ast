@@ -3,7 +3,7 @@
 import json
 from .external import GameInteract, BuiltInFunction
 from .define import (
-    ConditionWithCode,
+    ConditionCodeBlock,
     ForLoopCodeBlock,
     OpcodeBase,
     OpcodeAssign,
@@ -130,12 +130,12 @@ class CodeRunner:
 
     def _fast_condition_panic(
         self, condition, index=-1, err=""
-    ):  # type: (ConditionWithCode, int, str) -> None
+    ):  # type: (ConditionCodeBlock, int, str) -> None
         """
         _fast_condition_panic 抛出发生在条件代码块中的运行时错误
 
         Args:
-            condition (ConditionWithCode):
+            condition (ConditionCodeBlock):
                 错误所在的条件代码块
             index (int, optional):
                 如果错误发生在条件本身，则应提供 -1。

@@ -28,9 +28,9 @@ OPCODE_ID_TO_NAME = {
 DEFAULT_EMPTY_EXPRESSION = ExpressionCombine()
 
 
-class ConditionWithCode:
+class ConditionCodeBlock:
     """
-    ConditionWithCode 指示条件代码块。
+    ConditionCodeBlock 指示条件代码块。
 
     它包含了一个条件判断和一个代码块。
     一个代码块中可以包含多个待执行的操作。
@@ -72,7 +72,7 @@ class ConditionWithCode:
         Returns:
             str: 该条件代码块的字符串表示
         """
-        return "ConditionWithCode(condition={}, line={}, code_block={})".format(
+        return "ConditionCodeBlock(condition={}, line={}, code_block={})".format(
             self.condition,
             json.dumps(self.state_line, ensure_ascii=False),
             self.code_block,
@@ -208,14 +208,14 @@ class OpcodeCondition(OpcodeBase):
     """
 
     opcode_id = OPCODE_CONDITION  # type: int
-    opcode_payload = []  # type: list[ConditionWithCode]
+    opcode_payload = []  # type: list[ConditionCodeBlock]
     origin_line = "fi"  # type: str
 
-    def __init__(self, payload):  # type: (list[ConditionWithCode]) -> None
+    def __init__(self, payload):  # type: (list[ConditionCodeBlock]) -> None
         """初始化并返回一个新的 OpcodeCondition
 
         Args:
-            payload (list[ConditionWithCode]):
+            payload (list[ConditionCodeBlock]):
                 该条件语句所包含的一系列条件代码块。
         """
         OpcodeBase.__init__(self, OPCODE_CONDITION, payload, "fi")
