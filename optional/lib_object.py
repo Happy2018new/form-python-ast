@@ -31,7 +31,7 @@ REF_TYPE_DATETIME_TIMEDELTA = 10
 REF_TYPE_DATETIME_TIME = 11
 REF_TYPE_DATETIME_DATE = 12
 REF_TYPE_DATETIME_DATETIME = 13
-REF_TYPE_UNKNOWN = 14
+REF_TYPE_OTHERS = 0xFFFF
 
 
 class BaseManager:
@@ -347,7 +347,7 @@ class BaseManager:
         elif isinstance(obj, set):
             return REF_TYPE_SET
         else:
-            return REF_TYPE_UNKNOWN
+            return REF_TYPE_OTHERS
 
     def build_func(
         self,
