@@ -9,8 +9,6 @@ import json
 from .lib_object import BaseManager
 from .checker.checker import check_object
 
-IS_PRODUCTION_ENV = True
-
 
 class Reflect:
     """
@@ -18,7 +16,6 @@ class Reflect:
     """
 
     _manager = BaseManager()
-    _debug = False
 
     def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Reflect
@@ -28,7 +25,6 @@ class Reflect:
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
-        self._debug = not IS_PRODUCTION_ENV
 
     def cast(self, ptr_a, ptr_b):  # type: (int, int) -> int
         """
@@ -147,93 +143,62 @@ class Reflect:
             return 0
 
     def hasattr(self, ptr, attr):  # type: (int, str) -> bool
-        """hasattr 检查对象是否拥有某属性
+        """
+        hasattr 检查对象是否拥有 attr 指示的属性
 
         Args:
             ptr (int): 目标对象的指针
             attr (str): 欲检查的属性的名称
 
-        Raises:
-            Exception:
-                如果试图操作私有属性，
-                或本次操作被判定为不安全，
-                则抛出对应的错误
-
         Returns:
             bool: 目标对象是否拥有该属性
         """
-        if not self._debug and attr.startswith("_"):
-            raise Exception(
-                "hasattr: Try to operate on private attribute (attr={})".format(
-                    json.dumps(attr, ensure_ascii=False)
-                )
-            )
         try:
             return hasattr(self._manager.deref(ptr), attr)
         except Exception:
             return False
 
     def getattr(self, ptr, attr):  # type: (int, str) -> int
-        """getattr 获取对象的某属性
+        """
+        getattr 获取对象在 attr 上指示的属性。
+        如果 attr 或目标属性是受保护的特性，则将返回 0
 
         Args:
             ptr (int): 目标对象的指针
             attr (str): 欲获取的属性的名称
-
-        Raises:
-            Exception:
-                如果试图操作私有属性，
-                或本次操作被判定为不安全，
-                则抛出对应的错误
 
         Returns:
             int:
                 如果成功，则返回该属性对应对象的指针；
                 否则失败，那么返回 0
         """
-        if not self._debug and attr.startswith("_"):
-            raise Exception(
-                "getattr: Try to operate on private attribute (attr={})".format(
-                    json.dumps(attr, ensure_ascii=False)
-                )
-            )
+        if attr.startswith("_"):
+            return 0
 
         try:
             result = getattr(self._manager.deref(ptr), attr)
         except Exception:
             return 0
-        if not self._debug and not check_object(result):
-            raise Exception(
-                "getattr: Unsafe operation is not allowed (attr={})".format(
-                    json.dumps(attr, ensure_ascii=False)
-                )
-            )
+        if attr.startswith("_") or not check_object(result):
+            return 0
 
         return self._manager.ref(result)
 
     def setattr(self, obj_ptr, obj_attr, value_ptr):  # type: (int, str, int) -> bool
-        """setattr 设置对象的某属性
+        """
+        setattr 设置对象在 obj_attr 上指示的属性。
+        如果 obj_attr 是受保护的特性，则将返回 False
 
         Args:
             obj_ptr (int): 目标对象的指针
             obj_attr (str): 欲设置的属性的名称
             value_ptr (int): 要设置的值的指针
 
-        Raises:
-            Exception:
-                如果试图操作私有属性，
-                或本次操作被判定为不安全，
-                则抛出对应的错误
-
         Returns:
             bool: 操作是否成功
         """
-        if not self._debug and obj_attr.startswith("_"):
-            raise Exception(
-                "setattr: Try to operate on private attribute (attr={})".format(
-                    json.dumps(obj_attr, ensure_ascii=False)
-                )
-            )
+        if obj_attr.startswith("_"):
+            return False
         try:
             setattr(
                 self._manager.deref(obj_ptr), obj_attr, self._manager.deref(value_ptr)
@@ -243,27 +208,19 @@ class Reflect:
             return False
 
     def delattr(self, ptr, attr):  # type: (int, str) -> bool
-        """delattr 删除对象的某属性
+        """
+        delattr 删除对象在 attr 上指示的属性。
+        如果 attr 是受保护的特性，则将返回 False
 
         Args:
             ptr (int): 目标对象的指针
             attr (str): 欲删除的属性的名称
 
-        Raises:
-            Exception:
-                如果试图操作私有属性，
-                或本次操作被判定为不安全，
-                则抛出对应的错误
-
         Returns:
             bool: 操作是否成功
         """
-        if not self._debug and attr.startswith("_"):
-            raise Exception(
-                "delattr: Try to operate on private attribute (attr={})".format(
-                    json.dumps(attr, ensure_ascii=False)
-                )
-            )
+        if attr.startswith("_"):
+            return False
         try:
             delattr(self._manager.deref(ptr), attr)
             return True
@@ -841,15 +798,6 @@ class Reflect:
         except Exception:
             return 0
 
-    def unsafe(self):  # type: () -> bool
-        """
-        unsafe 返回当前环境是否是生产环境
-
-        Returns:
-            bool: 当前环境是否是生产环境
-        """
-        return self._debug
-
     def build_func(
         self,
         origin,  # type: dict[str, Callable[..., int | bool | float | str]]
@@ -906,7 +854,6 @@ class Reflect:
         funcs["reflect.max"] = self.max
         funcs["reflect.min"] = self.min
         funcs["reflect.sum"] = self.sum
-        funcs["reflect.unsafe"] = self.unsafe
 
         for key, value in funcs.items():
             origin[key] = value
