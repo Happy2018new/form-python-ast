@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import copy
 import json
-from .lib_object import ObjectManager
+from .lib_object import BaseManager
 from .checker.checker import check_object
 
 IS_PRODUCTION_ENV = True
@@ -17,14 +17,14 @@ class Reflect:
     Reflect 提供了对反射的内置操作
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
     _debug = False
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Reflect
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager

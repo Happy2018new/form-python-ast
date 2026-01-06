@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable
 
 import base64
-from .lib_object import ObjectManager
+from .lib_object import BaseManager
 
 
 class Base64:
@@ -13,13 +13,13 @@ class Base64:
     Base64 提供了 base64 相关的内置函数
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Base64
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager

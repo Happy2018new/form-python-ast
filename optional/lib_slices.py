@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
 import bisect
-from .lib_object import ObjectManager
+from .lib_object import BaseManager
 
 
 class Slices:
@@ -13,13 +13,13 @@ class Slices:
     Slices 提供了对切片的内置操作
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Slices
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .lib_object import ObjectManager
+from .lib_object import BaseManager
 from .lib_reflect import Reflect
 from .lib_slices import Slices
 from .lib_maps import Maps

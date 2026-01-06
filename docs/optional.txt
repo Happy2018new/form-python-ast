@@ -75,13 +75,13 @@ slices.sub
 slices.insert
 slices.pop
 slices.reverse
-slices.sort (sort order..)
+slices.sort (Support order)
 slices.concat
 slices.binsearch (= BinarySearch)
 
 
 
-maps.make (ordered..)
+maps.make (Support ordered map)
 maps.cast
 maps.length
 maps.copy
@@ -256,7 +256,7 @@ math.modf
 math.pi
 math.mod
 math.pow
-math.powmod (= pow..)
+math.powmod (= pow(x, y, mod))
 math.radians
 math.sin
 math.sinh
@@ -285,11 +285,14 @@ random.triangular
 random.uniform
 random.vonmisesvariate
 random.weibullvariate
+random.seed
+random.getstate
+random.setstate
 
 
 
-json.dumps (rewrite ..)
-json.loads (rewrite ..)
+json.dumps
+json.loads
 
 
 

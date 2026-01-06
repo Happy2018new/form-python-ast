@@ -34,16 +34,19 @@ REF_TYPE_DATETIME_DATETIME = 13
 REF_TYPE_UNKNOWN = 14
 
 
-class ObjectManager:
+class BaseManager:
     """
-    ObjectManager 是所有引用对象的管理器
+    BaseManager 是一个基本管理器，
+    它管理了所有依赖共用的随机数生成器和引用对象
     """
 
+    _random = random.Random()  # type: random.Random
     _mapping = {}  # type: dict[int, Any]
     _pinned = set()  # type: set[int]
 
     def __init__(self):  # type: () -> None
-        """初始化并返回一个新的引用对象管理器"""
+        """初始化并返回一个新的基本管理器"""
+        self._random = random.Random()
         self._mapping = {}
         self._pinned = set()
 
@@ -57,9 +60,19 @@ class ObjectManager:
             int: 分配到的指针
         """
         while True:
-            ptr = random.randint(MIN_INT32, MAX_INT32)
+            ptr = self._random.randint(MIN_INT32, MAX_INT32)
             if ptr != 0 and ptr not in self._mapping:
                 return ptr
+
+    def rand(self):  # type: () -> random.Random
+        """
+        rand 返回用于生成随机数的随机数生成器。
+
+        Returns:
+            random.Random:
+                用于生成随机数的随机数生成器
+        """
+        return self._random
 
     def ref(self, obj):  # type: (Any) -> int
         """

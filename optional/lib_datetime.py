@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
 import datetime
-from .lib_object import ObjectManager
+from .lib_object import BaseManager
 
 
 class TimeDelta:
@@ -13,13 +13,13 @@ class TimeDelta:
     TimeDelta 提供了时间差相关的内置函数
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 TimeDelta
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
@@ -190,13 +190,13 @@ class Time:
     Time 基于 datetime 提供了时间相关的内置函数
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Time
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
@@ -382,13 +382,13 @@ class Date:
     Date 基于 datetime 提供了日期相关的内置函数
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 Date
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
@@ -607,13 +607,13 @@ class DateTime:
     Date 基于 datetime 提供了日期和时间相关的内置函数
     """
 
-    _manager = ObjectManager()
+    _manager = BaseManager()
 
-    def __init__(self, manager):  # type: (ObjectManager) -> None
+    def __init__(self, manager):  # type: (BaseManager) -> None
         """初始化并返回一个新的 DateTime
 
         Args:
-            manager (ObjectManager):
+            manager (BaseManager):
                 用于管理引用对象的对象管理器
         """
         self._manager = manager
