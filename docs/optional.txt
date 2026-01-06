@@ -69,7 +69,6 @@ slices.set
 slices.max
 slices.min
 slices.sum
-slices.clear
 slices.sub
 slices.insert
 slices.pop
@@ -149,11 +148,8 @@ strings.index
 strings.rindex
 strings.isalnum
 strings.isalpha
-strings.isascii
-strings.isdecimal
 strings.isdigit
 strings.islower
-strings.isnumeric
 strings.isspace
 strings.istitle
 strings.isupper
@@ -271,7 +267,6 @@ random.choice
 random.expovariate
 random.gammavariate
 random.gauss
-random.getrandbits
 random.lognormvariate
 random.normalvariate
 random.paretovariate
@@ -322,7 +317,6 @@ datetime_datetime.min
 datetime_datetime.minute
 datetime_datetime.month
 datetime_datetime.replace
-datetime_datetime.resolution
 datetime_datetime.second
 datetime_datetime.strftime
 datetime_datetime.strptime
@@ -353,7 +347,6 @@ datetime_date.max
 datetime_date.min
 datetime_date.month
 datetime_date.replace
-datetime_date.resolution
 datetime_date.strftime
 datetime_date.timetuple
 datetime_date.today
@@ -378,7 +371,6 @@ datetime_time.microsecond
 datetime_time.min
 datetime_time.minute
 datetime_time.replace
-datetime_time.resolution
 datetime_time.second
 datetime_time.strftime
 datetime_time.greater
@@ -386,7 +378,6 @@ datetime_time.less
 datetime_time.greater_equal
 datetime_time.less_equal
 datetime_time.equal
-datetime_time.not_equal
 
 datetime_timedelta.new
 datetime_timedelta.format
@@ -394,7 +385,6 @@ datetime_timedelta.days
 datetime_timedelta.max
 datetime_timedelta.microseconds
 datetime_timedelta.min
-datetime_timedelta.resolution
 datetime_timedelta.seconds
 datetime_timedelta.total_seconds
 datetime_timedelta.greater

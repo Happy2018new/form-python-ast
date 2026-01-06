@@ -24,6 +24,27 @@ class TimeDelta:
         """
         self._manager = manager
 
+    def _deref(self, ptr):  # type: (int) -> datetime.timedelta
+        """
+        _deref 解引用 ptr 指针，并检查所得对象是否是时间差对象。
+        如果所得对象是这样的对象，则将其返回，否则抛出对应的错误
+
+        Args:
+            ptr (int): 目标对象的指针
+
+        Raises:
+            Exception:
+                如果目标对象不是时间差对象，
+                则抛出相应的错误
+
+        Returns:
+            datetime.timedelta: 解引用所得的对象
+        """
+        obj = self._manager.deref(ptr)
+        if not isinstance(obj, datetime.timedelta):
+            raise Exception("_deref: Target object is not a timedelta")
+        return obj
+
     def new(
         self,
         days=0.0,  # type: float
@@ -69,27 +90,6 @@ class TimeDelta:
             )
         )
 
-    def _deref(self, ptr):  # type: (int) -> datetime.timedelta
-        """
-        _deref 解引用 ptr 指针，并检查所得对象是否是时间差对象。
-        如果所得对象是这样的对象，则将其返回，否则抛出对应的错误
-
-        Args:
-            ptr (int): 目标对象的指针
-
-        Raises:
-            Exception:
-                如果目标对象不是时间差对象，
-                则抛出相应的错误
-
-        Returns:
-            datetime.timedelta: 解引用所得的对象
-        """
-        obj = self._manager.deref(ptr)
-        if not isinstance(obj, datetime.timedelta):
-            raise Exception("_deref: Target object is not a timedelta")
-        return obj
-
     def format(self, ptr):  # type: (int) -> str
         """
         format 将时间差对象格式化为其字符串表示
@@ -129,17 +129,14 @@ class TimeDelta:
         funcs["datetime_timedelta.new"] = self.new
         funcs["datetime_timedelta.format"] = self.format
         funcs["datetime_timedelta.days"] = lambda ptr: self._deref(ptr).days
-        funcs["datetime_timedelta.max"] = lambda ptr: self._manager.ref(
-            self._deref(ptr).max
+        funcs["datetime_timedelta.max"] = lambda: self._manager.ref(
+            datetime.timedelta.max
         )
         funcs["datetime_timedelta.microseconds"] = lambda ptr: float(
             self._deref(ptr).microseconds
         )
-        funcs["datetime_timedelta.min"] = lambda ptr: self._manager.ref(
-            self._deref(ptr).min
-        )
-        funcs["datetime_timedelta.resolution"] = lambda ptr: self._manager.ref(
-            self._deref(ptr).resolution
+        funcs["datetime_timedelta.min"] = lambda: self._manager.ref(
+            datetime.timedelta.min
         )
         funcs["datetime_timedelta.seconds"] = lambda ptr: float(
             self._deref(ptr).seconds
@@ -228,7 +225,6 @@ class Time:
         minute=0,  # type: int
         second=0,  # type: int
         microsecond=0,  # type: int
-        fold=0,  # type: int
     ):  # type: (...) -> int
         """
         new 创建并返回一个新的时间对象
@@ -246,16 +242,11 @@ class Time:
             microsecond (int, optional):
                 时间对象的微秒数。
                 默认值为 0
-            fold (int, optional):
-                时间对象的 fold 值。
-                默认值为 0
 
         Returns:
             int: 新创建的时间对象的指针
         """
-        return self._manager.ref(
-            datetime.time(hour, minute, second, microsecond, fold=fold)
-        )
+        return self._manager.ref(datetime.time(hour, minute, second, microsecond))
 
     def format(self, ptr):  # type: (int) -> str
         """
@@ -284,13 +275,14 @@ class Time:
         minute=0,  # type: int
         second=0,  # type: int
         microsecond=0,  # type: int
-        fold=0,  # type: int
     ):  # type: (...) -> int
         """
         replace 替换时间对象的各个组成部分，
         并返回一个新的时间对象
 
         Args:
+            ptr (int):
+                目标时间对象的指针
             hour (int, optional):
                 要替换的小时数。
                 默认值为 0
@@ -302,9 +294,6 @@ class Time:
                 默认值为 0
             microsecond (int, optional):
                 要替换的微秒数。
-                默认值为 0
-            fold (int, optional):
-                要替换的 fold 值。
                 默认值为 0
 
         Raises:
@@ -318,9 +307,7 @@ class Time:
         obj = self._manager.deref(ptr)
         if not isinstance(obj, datetime.time):
             raise Exception("datetime_time.replace: Target object is not a time")
-        return self._manager.ref(
-            obj.replace(hour, minute, second, microsecond, fold=fold)
-        )
+        return self._manager.ref(obj.replace(hour, minute, second, microsecond))
 
     def build_func(
         self,
@@ -339,17 +326,12 @@ class Time:
         funcs["datetime_time.new"] = self.new
         funcs["datetime_time.format"] = self.format
         funcs["datetime_time.hour"] = lambda ptr: self._deref(ptr).hour
-        funcs["datetime_time.isoformat"] = lambda ptr, timespec="auto": self._deref(
-            ptr
-        ).isoformat(timespec)
+        funcs["datetime_time.isoformat"] = lambda ptr: self._deref(ptr).isoformat()
         funcs["datetime_time.max"] = lambda: self._manager.ref(datetime.time.max)
         funcs["datetime_time.microsecond"] = lambda ptr: self._deref(ptr).microsecond
         funcs["datetime_time.min"] = lambda: self._manager.ref(datetime.time.min)
         funcs["datetime_time.minute"] = lambda ptr: self._deref(ptr).minute
         funcs["datetime_time.replace"] = self.replace
-        funcs["datetime_time.resolution"] = lambda: self._manager.ref(
-            datetime.time.resolution
-        )
         funcs["datetime_time.second"] = lambda ptr: self._deref(ptr).second
         funcs["datetime_time.strftime"] = lambda ptr, format: self._deref(ptr).strftime(
             format
@@ -369,9 +351,6 @@ class Time:
         funcs["datetime_time.equal"] = lambda ptr_a, ptr_b: self._deref(
             ptr_a
         ) == self._deref(ptr_b)
-        funcs["datetime_time.not_equal"] = lambda ptr_a, ptr_b: self._deref(
-            ptr_a
-        ) != self._deref(ptr_b)
 
         for key, value in funcs.items():
             origin[key] = value
@@ -454,6 +433,7 @@ class Date:
         并返回一个新的日期对象
 
         Args:
+            ptr (int): 目标日期对象的指针
             year (int): 要替换的年份
             month (int): 要替换的月份
             day (int): 要替换的天数
@@ -564,9 +544,6 @@ class Date:
         funcs["datetime_date.min"] = lambda: self._manager.ref(datetime.date.min)
         funcs["datetime_date.month"] = lambda ptr: self._deref(ptr).month
         funcs["datetime_date.replace"] = self.replace
-        funcs["datetime_date.resolution"] = lambda: self._manager.ref(
-            datetime.date.resolution
-        )
         funcs["datetime_date.strftime"] = lambda ptr, format: self._deref(ptr).strftime(
             format
         )
@@ -648,7 +625,6 @@ class DateTime:
         minute=0,  # type: int
         second=0,  # type: int
         microsecond=0,  # type: int
-        fold=0,  # type: int
     ):  # type: (...) -> int
         """new 创建并返回一个新的 DateTime
 
@@ -671,17 +647,12 @@ class DateTime:
             microsecond (int, optional):
                 该 DateTime 的微秒数。
                 默认值为 0
-            fold (int, optional):
-                该 DateTime 的 fold 值。
-                默认值为 0
 
         Returns:
             int: 新创建的 DateTime 的指针
         """
         return self._manager.ref(
-            datetime.datetime(
-                year, month, day, hour, minute, second, microsecond, fold=fold
-            )
+            datetime.datetime(year, month, day, hour, minute, second, microsecond)
         )
 
     def format(self, ptr):  # type: (int) -> str
@@ -742,13 +713,14 @@ class DateTime:
         minute=0,  # type: int
         second=0,  # type: int
         microsecond=0,  # type: int
-        fold=0,  # type: int
     ):  # type: (...) -> int
         """
         replace 替换 DateTime 的各个组成部分，
         并返回一个新的 DateTime
 
         Args:
+            ptr (int):
+                目标 DateTime 的指针
             year (int):
                 要替换的年份
             month (int):
@@ -767,9 +739,6 @@ class DateTime:
             microsecond (int, optional):
                 要替换的微秒数。
                 默认值为 0
-            fold (int, optional):
-                要替换的 fold 值。
-                默认值为 0
 
         Raises:
             Exception:
@@ -785,7 +754,7 @@ class DateTime:
                 "datetime_datetime.replace: Target object is not a datetime"
             )
         return self._manager.ref(
-            obj.replace(year, month, day, hour, minute, second, microsecond, fold=fold)
+            obj.replace(year, month, day, hour, minute, second, microsecond)
         )
 
     def add_delta(self, datetime_ptr, timedelta_ptr):  # type: (int, int) -> int
@@ -883,11 +852,9 @@ class DateTime:
         funcs["datetime_datetime.isocalendar"] = lambda ptr: self._manager.ref(
             self._deref(ptr).isocalendar()
         )
-        funcs["datetime_datetime.isoformat"] = (
-            lambda ptr, sep="T", timespec="auto": self._deref(ptr).isoformat(
-                sep, timespec
-            )
-        )
+        funcs["datetime_datetime.isoformat"] = lambda ptr, sep="T": self._deref(
+            ptr
+        ).isoformat(sep)
         funcs["datetime_datetime.isoweekday"] = lambda ptr: self._deref(
             ptr
         ).isoweekday()
@@ -903,9 +870,6 @@ class DateTime:
         funcs["datetime_datetime.minute"] = lambda ptr: self._deref(ptr).minute
         funcs["datetime_datetime.month"] = lambda ptr: self._deref(ptr).month
         funcs["datetime_datetime.replace"] = self.replace
-        funcs["datetime_datetime.resolution"] = lambda: self._manager.ref(
-            datetime.datetime.resolution
-        )
         funcs["datetime_datetime.second"] = lambda ptr: self._deref(ptr).second
         funcs["datetime_datetime.strftime"] = lambda ptr, format: self._deref(
             ptr
@@ -921,8 +885,8 @@ class DateTime:
         funcs["datetime_datetime.timetuple"] = lambda ptr: self._manager.ref(
             self._deref(ptr).timetuple()
         )
-        funcs["datetime_datetime.today"] = lambda ptr: self._manager.ref(
-            self._deref(ptr).today()
+        funcs["datetime_datetime.today"] = lambda: self._manager.ref(
+            datetime.datetime.today()
         )
         funcs["datetime_datetime.toordinal"] = lambda ptr: self._deref(ptr).toordinal()
         funcs["datetime_datetime.weekday"] = lambda ptr: self._deref(ptr).weekday()

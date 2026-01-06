@@ -35,63 +35,6 @@ class Random:
         """
         return self._manager.rand()
 
-    def sample(
-        self, population_ptr, k, counts_ptr=None
-    ):  # type: (int, int, int | None) -> int
-        """
-        sample chooses k unique random elements from a population sequence.
-
-        Returns a new list containing elements from the population while
-        leaving the original population unchanged. The resulting list is
-        in selection order so that all sub-slices will also be valid random
-        samples. This allows raffle winners (the sample) to be partitioned
-        into grand prize and second place winners (the subslices).
-
-        Members of the population need not be hashable or unique. If the
-        population contains repeats, then each occurrence is a possible
-        selection in the sample.
-
-        Repeated elements can be specified one at a time or with the optional
-        counts parameter. For example:
-        ```
-            sample(['red', 'blue'], counts=[4, 2], k=5)
-        ```
-
-        is equivalent to:
-        ```
-            sample(['red', 'red', 'red', 'red', 'blue', 'blue'], k=5)
-        ```
-
-        To choose a sample from a range of integers, use range() for the
-        population argument. This is especially fast and space efficient
-        for sampling from a large population:
-        ```
-            sample(range(10000000), 60)
-        ```
-
-        Args:
-            population_ptr (int): The pointer points to the population sequence
-            k (int): The number of unique elements to choose
-            counts_ptr (int, optional):
-                The pointer points to the counts sequence.
-                If is is zero or None, then this field will not used.
-                Defaults to None.
-
-        Returns:
-            int: The pointer points to the new list containing the chosen elements
-        """
-        if counts_ptr is None or counts_ptr == 0:
-            return self._manager.ref(
-                self.rand().sample(self._manager.deref(population_ptr), k)
-            )
-        return self._manager.ref(
-            self.rand().sample(
-                self._manager.deref(population_ptr),
-                k,
-                counts=self._manager.deref(counts_ptr),
-            )
-        )
-
     def shuffle(self, ptr):  # type: (int) -> bool
         """
         shuffle shuffles the given list in place,
@@ -158,7 +101,9 @@ class Random:
         """
         funcs = {}  # type: dict[str, Callable[..., int | bool | float | str]]
 
-        funcs["random.betavariate"] = lambda a, b: self.rand().betavariate(a, b)
+        funcs["random.betavariate"] = lambda alpha, beta: self.rand().betavariate(
+            alpha, beta
+        )
         funcs["random.choice"] = lambda ptr: self._manager.ref(
             self.rand().choice(self._manager.deref(ptr))
         )
@@ -167,7 +112,6 @@ class Random:
             alpha, beta
         )
         funcs["random.gauss"] = lambda mu=0.0, sigma=1.0: self.rand().gauss(mu, sigma)
-        funcs["random.getrandbits"] = lambda k: self.rand().getrandbits(k)
         funcs["random.lognormvariate"] = lambda mu, sigma: self.rand().lognormvariate(
             mu, sigma
         )
@@ -180,7 +124,9 @@ class Random:
         funcs["random.randrange"] = (
             lambda start, stop=None, step=1: self.rand().randrange(start, stop, step)
         )
-        funcs["random.sample"] = self.sample
+        funcs["random.sample"] = lambda population_ptr, k: self._manager.ref(
+            self.rand().sample(self._manager.deref(population_ptr), k)
+        )
         funcs["random.shuffle"] = self.shuffle
         funcs["random.triangular"] = (
             lambda low=0.0, high=1.0, mode=None: self.rand().triangular(low, high, mode)

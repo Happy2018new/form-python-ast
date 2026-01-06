@@ -24,23 +24,20 @@ class Binascii:
         """
         self._manager = manager
 
-    def a2b_base64(self, string, strict_mode=False):  # type: (str, bool) -> int | str
+    def a2b_base64(self, string):  # type: (str) -> int | str
         """
         a2b_base64 将给定的 Base64 编码字符串解码为二进制数据
 
         Args:
             string (str):
                 待解码的字符串
-            strict_mode (bool, optional):
-                是否启用严格模式，默认为 False。
-                启用严格模式后，输入字符串中包含非 Base64 字符时会引发异常
 
         Returns:
             int | str:
                 如果返回了一个整数，则它是一个指向了 bytes 的指针；
                 否则，返回了一个字符串，表示其在较低 Python 版本中的结果
         """
-        result = binascii.a2b_base64(string, strict_mode=strict_mode)
+        result = binascii.a2b_base64(string)
         if isinstance(result, str):
             return result
         return self._manager.ref(result)
@@ -62,7 +59,7 @@ class Binascii:
             return result
         return self._manager.ref(result)
 
-    def b2a_base64(self, ptr_or_str, newline=True):  # type: (int | str, bool) -> str
+    def b2a_base64(self, ptr_or_str):  # type: (int | str) -> str
         """
         b2a_base64 将给定的二进制数据编码为 Base64 字符串
 
@@ -70,20 +67,17 @@ class Binascii:
             ptr_or_str (int | str):
                 如果提供的是整数，则将从它指向的 bytes 对象编码；
                 否则，提供的是字符串，则将直接对其进行编码
-            newline (bool, optional):
-                是否在编码后的字符串末尾添加换行符。
-                默认值为 True
 
         Returns:
             str: 编码后的 Base64 字符串
         """
         if isinstance(ptr_or_str, int):
             obj_a = self._manager.deref(ptr_or_str)  # type: bytes
-            return binascii.b2a_base64(obj_a, newline=newline).decode(encoding="utf-8")
+            return binascii.b2a_base64(obj_a).decode(encoding="utf-8")
         else:
             temp = ptr_or_str  # type: Any
             obj_b = temp  # type: bytes
-            return binascii.b2a_base64(obj_b, newline=newline).decode(encoding="utf-8")
+            return binascii.b2a_base64(obj_b).decode(encoding="utf-8")
 
     def b2a_hex(self, ptr_or_str):  # type: (int | str) -> str
         """

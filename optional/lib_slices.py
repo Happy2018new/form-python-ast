@@ -252,25 +252,6 @@ class Slices:
 
         return result
 
-    def clear(self, ptr):  # type: (int) -> bool
-        """clear 清空整个切片，使得其长度变为 0
-
-        Args:
-            ptr (int): 目标切片的指针
-
-        Raises:
-            Exception:
-                如果目标对象不是切片，则抛出相应的错误
-
-        Returns:
-            bool: 总是返回 True
-        """
-        obj = self._manager.deref(ptr)
-        if not isinstance(obj, list):
-            raise Exception("slices.clear: Target object is not a slice")
-        obj.clear()
-        return True
-
     def sub(self, ptr, start, end):  # type: (int, int, int) -> int
         """sub 返回切片的子切片
 
@@ -455,7 +436,6 @@ class Slices:
         funcs["slices.max"] = self.max
         funcs["slices.min"] = self.min
         funcs["slices.sum"] = self.sum
-        funcs["slices.clear"] = self.clear
         funcs["slices.sub"] = self.sub
         funcs["slices.insert"] = self.insert
         funcs["slices.pop"] = self.pop
