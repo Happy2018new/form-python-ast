@@ -139,6 +139,17 @@ class BaseManager:
             return obj
         raise Exception("deref: Target object cannot be dereferenced")
 
+    def current(self):  # type: () -> set[int]
+        """
+        current 返回当前所有对象的指针。它主要用于递归时保留调用者的上下文。
+        有责任确保 current 的调用者总是来自于内部实现（如代码执行器）
+
+        Returns:
+            dict[int, Any]:
+                当前所有对象的指针
+        """
+        return set(self._mapping)
+
     def release(self, ptr):  # type: (int) -> bool
         """
         release 释放 ptr 指向的对象的引用。
@@ -164,23 +175,23 @@ class BaseManager:
         del self._mapping[ptr]
         return True
 
-    def release_all(self):  # type: () -> bool
+    def release_internal(self, last):  # type: (set[int]) -> None
         """
-        release_all 释放所有未被固定的对象的引用
+        release_internal 释放除 last 以外的，对所有未被固定的对象的引用。
+        release_internal 主要用于在递归的上下文调用之间释放不再需要的对象。
+        有责任确保 release_internal 的调用者总是来自于内部实现（如代码执行器）
 
-        Returns:
-            bool: 总是返回 True
+        Args:
+            last (set[int]):
+                释放过程中要特别排除的指针
         """
-        if len(self._pinned) == 0:
+        if len(last) == 0 and len(self._pinned) == 0:
             self._mapping.clear()
-            return True
-
-        mapping = {}  # type: dict[int, Any]
-        for ptr in self._pinned:
-            mapping[ptr] = self._mapping[ptr]
-        self._mapping = mapping
-
-        return True
+        else:
+            mapping = {}  # type: dict[int, Any]
+            for ptr in last | self._pinned:
+                mapping[ptr] = self._mapping[ptr]
+            self._mapping = mapping
 
     def pin(self, ptr):  # type: (int) -> bool
         """
@@ -367,7 +378,6 @@ class BaseManager:
         funcs["object.can_deref"] = self.can_user_deref
         funcs["object.deref"] = lambda ptr: self.deref(ptr, False)
         funcs["object.release"] = self.release
-        funcs["object.release_all"] = self.release_all
         funcs["object.pin"] = self.pin
         funcs["object.finalise"] = self.finalise
         funcs["object.make_none"] = self.make_none
