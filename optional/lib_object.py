@@ -288,11 +288,11 @@ class BaseManager:
         """
         if isinstance(obj, int):
             return RAW_TYPE_INT
-        elif isinstance(obj, bool):
+        if isinstance(obj, bool):
             return RAW_TYPE_BOOL
-        elif isinstance(obj, float):
+        if isinstance(obj, float):
             return RAW_TYPE_FLOAT
-        elif isinstance(obj, str):
+        if isinstance(obj, str):
             return RAW_TYPE_STR
 
     def ref_type(self, ptr):  # type: (int) -> int
@@ -330,35 +330,35 @@ class BaseManager:
 
         if isinstance(obj, uuid.UUID):
             return REF_TYPE_UUID
-        elif isinstance(obj, time.struct_time):
+        if isinstance(obj, time.struct_time):
             return REF_TYPE_STRUCT_TIME
-        elif isinstance(obj, datetime.timedelta):
+        if isinstance(obj, datetime.timedelta):
             return REF_TYPE_DATETIME_TIMEDELTA
-        elif isinstance(obj, datetime.time):
+        if isinstance(obj, datetime.time):
             return REF_TYPE_DATETIME_TIME
-        elif isinstance(obj, datetime.date):
+        if isinstance(obj, datetime.date):
             return REF_TYPE_DATETIME_DATE
-        elif isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime.datetime):
             return REF_TYPE_DATETIME_DATETIME
 
         if isinstance(obj, int):
             return REF_TYPE_INT
-        elif isinstance(obj, bool):
+        if isinstance(obj, bool):
             return REF_TYPE_BOOL
-        elif isinstance(obj, float):
+        if isinstance(obj, float):
             return REF_TYPE_FLOAT
-        elif isinstance(obj, str):
+        if isinstance(obj, str):
             return REF_TYPE_STR
-        elif isinstance(obj, list):
+        if isinstance(obj, list):
             return REF_TYPE_SLICE
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return REF_TYPE_MAP
-        elif isinstance(obj, tuple):
+        if isinstance(obj, tuple):
             return REF_TYPE_TUPLE
-        elif isinstance(obj, set):
+        if isinstance(obj, set):
             return REF_TYPE_SET
-        else:
-            return REF_TYPE_OTHERS
+
+        return REF_TYPE_OTHERS
 
     def build_func(
         self,
