@@ -55,7 +55,7 @@ class Math:
             int | float:
                 返回给定的对象，当且仅当它是实数时
         """
-        if not isinstance(obj, (int, float)):
+        if isinstance(obj, bool) or not isinstance(obj, (int, float)):
             raise Exception(
                 "_validate_number: Result {} is not a real number".format(obj)
             )
