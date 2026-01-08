@@ -37,7 +37,7 @@ class Math:
         Returns:
             int: 返回给定的对象，当且仅当它是整数时
         """
-        if not isinstance(obj, int):
+        if isinstance(obj, bool) or not isinstance(obj, int):
             raise Exception("_validate_int: Result {} is not an integer".format(obj))
         return obj
 
