@@ -188,10 +188,11 @@ class BaseManager:
         if len(last) == 0 and len(self._pinned) == 0:
             self._mapping.clear()
         else:
-            mapping = {}  # type: dict[int, Any]
-            for ptr in last | self._pinned:
-                mapping[ptr] = self._mapping[ptr]
-            self._mapping = mapping
+            self._mapping = {
+                ptr: self._mapping[ptr]
+                for ptr in last | self._pinned
+                if ptr in self._mapping
+            }
 
     def pin(self, ptr):  # type: (int) -> bool
         """
