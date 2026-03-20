@@ -25,6 +25,7 @@ const KEYWORDS = [
 ];
 
 const EXTERNAL_STATEMENTS = ["selector", "score", "command", "ref", "func"];
+const IDENTIFIER_TRIGGER_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".split("");
 
 let DISCOVERED_APIS: string[] = [];
 
@@ -1735,9 +1736,21 @@ function getExternalArgumentCompletions(
     position: vscode.Position
 ): vscode.CompletionItem[] {
     const hasTrailingWhitespace = /\s$/.test(linePrefix);
-    const leadingSpace = hasTrailingWhitespace ? "" : " ";
+    const leadingSpace = hasTrailingWhitespace || context.currentArgText.length > 0 ? "" : " ";
     const currentArgRange = new vscode.Range(
         new vscode.Position(position.line, context.currentArgStart),
+        position
+    );
+    const identifierPartialMatch = context.currentArgText.match(/([A-Za-z_][A-Za-z0-9_]*)$/);
+    const identifierPartial = identifierPartialMatch?.[1] ?? "";
+    const partialOffsetInArg = identifierPartial.length > 0
+        ? context.currentArgText.lastIndexOf(identifierPartial)
+        : -1;
+    const variableReplaceStart = identifierPartial.length > 0 && partialOffsetInArg >= 0
+        ? context.currentArgStart + partialOffsetInArg
+        : position.character;
+    const variableReplaceRange = new vscode.Range(
+        new vscode.Position(position.line, variableReplaceStart),
         position
     );
     const refTypePartialMatch = context.currentArgText.match(/([A-Za-z_]*)$/);
@@ -1770,7 +1783,7 @@ function getExternalArgumentCompletions(
                 "Command statement argument",
                 currentArgRange
             ),
-            ...variableItemsForRange(currentArgRange)
+            ...variableItemsForRange(variableReplaceRange)
         ];
     }
 
@@ -1791,7 +1804,7 @@ function getExternalArgumentCompletions(
                 "Selector statement argument",
                 currentArgRange
             ),
-            ...variableItemsForRange(currentArgRange)
+            ...variableItemsForRange(variableReplaceRange)
         ];
     }
 
@@ -1814,7 +1827,7 @@ function getExternalArgumentCompletions(
                     "Score statement argument",
                     currentArgRange
                 ),
-                ...variableItemsForRange(currentArgRange)
+                ...variableItemsForRange(variableReplaceRange)
             ];
         }
         if (context.argIndex === 2) {
@@ -1834,7 +1847,7 @@ function getExternalArgumentCompletions(
                     "Score statement argument",
                     currentArgRange
                 ),
-                ...variableItemsForRange(currentArgRange)
+                ...variableItemsForRange(variableReplaceRange)
             ];
         }
     }
@@ -1863,7 +1876,7 @@ function getExternalArgumentCompletions(
                 ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
                 ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem("index", leadingSpace + "${1:0}", "Ref statement argument"),
-                ...variableItemsForRange(currentArgRange)
+                ...variableItemsForRange(variableReplaceRange)
             ];
         }
     }
@@ -1922,7 +1935,7 @@ function getExternalArgumentCompletions(
             ...functionLiteralItems,
             ...functionTypeItems,
             ...bracedKeywordItems,
-            ...variableItemsForRange(currentArgRange)
+            ...variableItemsForRange(variableReplaceRange)
         ];
     }
 
@@ -2738,7 +2751,8 @@ export function activate(context: vscode.ExtensionContext): void {
         ".",
         "{",
         ",",
-        " "
+        " ",
+        ...IDENTIFIER_TRIGGER_CHARACTERS
     );
 
     context.subscriptions.push(provider);
