@@ -1,0 +1,59 @@
+{
+    "name": "form-python-ast-language-tools",
+    "displayName": "Form Python AST Language Tools",
+    "description": "Syntax highlighting and code completion for the custom Form Python AST language.",
+    "version": "0.0.2",
+    "publisher": "Happy2018new",
+    "engines": {
+        "vscode": "^1.88.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "form-python-ast",
+                "aliases": [
+                    "Form Python AST",
+                    "form-python-ast"
+                ],
+                "extensions": [
+                    ".hpl"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "form-python-ast",
+                "scopeName": "source.form-python-ast",
+                "path": "./syntaxes/form-python-ast.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "form-python-ast",
+                "path": "./snippets/form-python-ast.code-snippets"
+            }
+        ],
+        "configurationDefaults": {
+            "[form-python-ast]": {
+                "editor.insertSpaces": true,
+                "editor.tabSize": 2,
+                "editor.snippetSuggestions": "inline"
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.7",
+        "@types/vscode": "^1.88.0",
+        "typescript": "^5.4.5"
+    }
+}

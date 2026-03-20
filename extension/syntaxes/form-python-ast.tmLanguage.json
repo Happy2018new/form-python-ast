@@ -1,0 +1,295 @@
+{
+    "name": "Form Python AST",
+    "scopeName": "source.form-python-ast",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#controlKeywords"
+        },
+        {
+            "include": "#logicalKeywords"
+        },
+        {
+            "include": "#typeKeywords"
+        },
+        {
+            "include": "#constants"
+        },
+        {
+            "include": "#externalKeywords"
+        },
+        {
+            "include": "#externalCalls"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#punctuation"
+        },
+        {
+            "include": "#variables"
+        },
+        {
+            "include": "#functions"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.form-python-ast",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.form-python-ast",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.single.form-python-ast",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.form-python-ast",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.float.form-python-ast",
+                    "match": "\\b[+-]?\\d+\\.\\d+\\b"
+                },
+                {
+                    "name": "constant.numeric.integer.form-python-ast",
+                    "match": "\\b[+-]?\\d+\\b"
+                }
+            ]
+        },
+        "controlKeywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.form-python-ast",
+                    "match": "\\b(?:if|elif|else|fi|for|continue|break|rof|return)\\b"
+                }
+            ]
+        },
+        "logicalKeywords": {
+            "patterns": [
+                {
+                    "name": "constant.language.boolean.form-python-ast",
+                    "match": "\\b(?:and|or|not|in)\\b"
+                }
+            ]
+        },
+        "typeKeywords": {
+            "patterns": [
+                {
+                    "name": "storage.type.form-python-ast",
+                    "match": "\\b(?:int|bool|float|str)\\b"
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.language.boolean.form-python-ast",
+                    "match": "\\b(?:True|False)\\b"
+                }
+            ]
+        },
+        "externalKeywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.external.form-python-ast",
+                    "match": "\\b(?:ref|selector|score|command|func)\\b"
+                }
+            ]
+        },
+        "externalCalls": {
+            "patterns": [
+                {
+                    "name": "meta.external.ref.form-python-ast",
+                    "begin": "\\{\\s*(ref)\\s*,",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.external.form-python-ast"
+                        }
+                    },
+                    "end": "\\}",
+                    "patterns": [
+                        {
+                            "include": "#externalCalls"
+                        },
+                        {
+                            "name": "storage.type.form-python-ast",
+                            "match": "\\b(?:int|bool|float|str)\\b"
+                        },
+                        {
+                            "include": "#strings"
+                        },
+                        {
+                            "include": "#numbers"
+                        },
+                        {
+                            "include": "#variables"
+                        },
+                        {
+                            "include": "#logicalKeywords"
+                        },
+                        {
+                            "include": "#operators"
+                        },
+                        {
+                            "name": "punctuation.separator.comma.form-python-ast",
+                            "match": ","
+                        }
+                    ]
+                },
+                {
+                    "name": "meta.external.func.form-python-ast",
+                    "begin": "\\{\\s*(func)\\s*,",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.external.form-python-ast"
+                        }
+                    },
+                    "end": "\\}",
+                    "patterns": [
+                        {
+                            "include": "#externalCalls"
+                        },
+                        {
+                            "name": "entity.name.function.form-python-ast",
+                            "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)+\\b"
+                        },
+                        {
+                            "name": "entity.name.function.call.form-python-ast",
+                            "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\s*(?=\\()"
+                        },
+                        {
+                            "include": "#strings"
+                        },
+                        {
+                            "include": "#numbers"
+                        },
+                        {
+                            "include": "#variables"
+                        },
+                        {
+                            "include": "#logicalKeywords"
+                        },
+                        {
+                            "include": "#operators"
+                        },
+                        {
+                            "name": "punctuation.separator.comma.form-python-ast",
+                            "match": ","
+                        }
+                    ]
+                },
+                {
+                    "name": "meta.external.form-python-ast",
+                    "begin": "\\{",
+                    "end": "\\}",
+                    "patterns": [
+                        {
+                            "include": "#externalCalls"
+                        },
+                        {
+                            "name": "keyword.control.external.form-python-ast",
+                            "match": "(?<=\\{)\\s*(?:selector|score|command|ref|func)\\b"
+                        },
+                        {
+                            "include": "#strings"
+                        },
+                        {
+                            "include": "#numbers"
+                        },
+                        {
+                            "include": "#variables"
+                        },
+                        {
+                            "include": "#logicalKeywords"
+                        },
+                        {
+                            "include": "#functions"
+                        },
+                        {
+                            "include": "#operators"
+                        },
+                        {
+                            "name": "punctuation.separator.comma.form-python-ast",
+                            "match": ","
+                        }
+                    ]
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "name": "support.function.form-python-ast",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\.[a-zA-Z_][a-zA-Z0-9_]*\\b"
+                },
+                {
+                    "name": "entity.name.function.call.form-python-ast",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\s*(?=\\()"
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
+                {
+                    "name": "variable.other.assignment.form-python-ast",
+                    "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b(?=\\s*=)"
+                },
+                {
+                    "name": "variable.other.readwrite.form-python-ast",
+                    "match": "\\b(?!(?:if|elif|else|fi|for|continue|break|rof|return|and|or|not|in|True|False|int|bool|float|str|ref|selector|score|command|func)\\b)[A-Za-z_][A-Za-z0-9_]*\\b"
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.comparison.form-python-ast",
+                    "match": "==|!=|<=|>=|<|>"
+                },
+                {
+                    "name": "keyword.operator.assignment.form-python-ast",
+                    "match": "="
+                },
+                {
+                    "name": "keyword.operator.arithmetic.form-python-ast",
+                    "match": "\\+|\\-|\\*|/"
+                }
+            ]
+        },
+        "punctuation": {
+            "patterns": [
+                {
+                    "name": "punctuation.section.form-python-ast",
+                    "match": "[(){}\\[\\],:]"
+                }
+            ]
+        }
+    }
+}

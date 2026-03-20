@@ -1,0 +1,86 @@
+{
+    "If Block": {
+        "prefix": "if",
+        "body": [
+            "if ${1:condition}:",
+            "  ${2:body}",
+            "fi"
+        ],
+        "description": "if ... fi block"
+    },
+    "If Else Block": {
+        "prefix": "ifelse",
+        "body": [
+            "if ${1:condition}:",
+            "  ${2:when_true}",
+            "else:",
+            "  ${3:when_false}",
+            "fi"
+        ],
+        "description": "if/else block"
+    },
+    "If Elif Else Block": {
+        "prefix": "ifel",
+        "body": [
+            "if ${1:condition_a}:",
+            "  ${2:when_a_true}",
+            "elif ${3:condition_b}:",
+            "  ${4:when_b_true}",
+            "else:",
+            "  ${5:when_all_false}",
+            "fi"
+        ],
+        "description": "if/elif/else block"
+    },
+    "For Block": {
+        "prefix": "for",
+        "body": [
+            "for ${1:i}, ${2:count}:",
+            "  ${3:body}",
+            "rof"
+        ],
+        "description": "for ... rof block"
+    },
+    "Selector Statement": {
+        "prefix": "selector",
+        "body": [
+            "{selector, '${1:@s}'}"
+        ],
+        "description": "Selector statement"
+    },
+    "Score Statement": {
+        "prefix": "score",
+        "body": [
+            "{score, '${1:@s}', '${2:coin}'}"
+        ],
+        "description": "Score statement"
+    },
+    "Command Statement": {
+        "prefix": "command",
+        "body": [
+            "{command, '${1:say Hello, World!}'}"
+        ],
+        "description": "Command statement"
+    },
+    "Ref Statement": {
+        "prefix": "ref",
+        "body": [
+            "{ref, ${1|int,bool,float,str|}, ${2:0}}"
+        ],
+        "description": "Ref statement"
+    },
+    "Func Statement": {
+        "prefix": "func",
+        "body": [
+            "{func, ${1:math.sqrt(4)}}"
+        ],
+        "description": "Func statement"
+    },
+    "Return": {
+        "prefix": "return",
+        "body": [
+            "return ${1:value}"
+        ],
+        "description": "return statement"
+    }
+}
