@@ -934,6 +934,32 @@ function buildFunctionArgumentCompletions(
     return items;
 }
 
+function buildFunctionLiteralCompletions(
+    context: { argumentPrefix: string },
+    position: vscode.Position
+): vscode.CompletionItem[] {
+    const currentArgText = extractCurrentTopLevelArgument(context.argumentPrefix);
+    const typedMatch = currentArgText.match(/([A-Za-z_]*)$/);
+    const typed = typedMatch?.[1] ?? "";
+    const replaceRange = new vscode.Range(
+        new vscode.Position(position.line, position.character - typed.length),
+        position
+    );
+
+    const literals = ["True", "False"];
+    return literals
+        .filter((name) => name.startsWith(typed))
+        .map((name) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Keyword);
+            item.insertText = name;
+            item.detail = "Boolean literal";
+            item.sortText = `050_literal_${name}`;
+            item.range = replaceRange;
+            item.filterText = name;
+            return item;
+        });
+}
+
 function isInsideFuncExternal(document: vscode.TextDocument, position: vscode.Position): boolean {
     const upToCursor = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
     return findEnclosingFuncStart(upToCursor) >= 0;
@@ -1367,6 +1393,19 @@ function nestedExternalItem(
     return item;
 }
 
+function booleanLiteralItemsForRange(
+    leadingSpace: string,
+    replaceRange: vscode.Range
+): vscode.CompletionItem[] {
+    return ["True", "False"].map((literal) => {
+        const item = new vscode.CompletionItem(literal, vscode.CompletionItemKind.Keyword);
+        item.insertText = leadingSpace + literal;
+        item.range = replaceRange;
+        item.sortText = `2_bool_${literal}`;
+        return item;
+    });
+}
+
 function buildBracedExternalKeywordItems(
     _document: vscode.TextDocument,
     currentArgText: string,
@@ -1581,6 +1620,7 @@ function getExternalArgumentCompletions(
         );
         return [
             ...bracedKeywordItems,
+            ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
             externalArgItem(
                 "commandLine",
                 leadingSpace + "'${1:say Hello, World!}'",
@@ -1600,6 +1640,7 @@ function getExternalArgumentCompletions(
         );
         return [
             ...bracedKeywordItems,
+            ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
             externalArgItem(
                 "target",
                 leadingSpace + "'${1:@s}'",
@@ -1621,6 +1662,7 @@ function getExternalArgumentCompletions(
 
             return [
                 ...bracedKeywordItems,
+                ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem(
                     "player",
                     leadingSpace + "'${1:@s}'",
@@ -1639,6 +1681,7 @@ function getExternalArgumentCompletions(
             );
             return [
                 ...bracedKeywordItems,
+                ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem(
                     "scoreboard",
                     leadingSpace + "'${1:coin}'",
@@ -1671,6 +1714,7 @@ function getExternalArgumentCompletions(
             );
             return [
                 ...bracedKeywordItems,
+                ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem("index", leadingSpace + "${1:0}", "Ref statement argument"),
                 ...variableItemsForRange(currentArgRange)
             ];
@@ -1684,6 +1728,13 @@ function getExternalArgumentCompletions(
             position,
             ["selector", "score", "command", "ref", "func"]
         );
+        const functionCallContext = getFunctionCallContext(document, position);
+        const functionArgItems = functionCallContext
+            ? buildFunctionArgumentCompletions(functionCallContext, position)
+            : [];
+        const functionLiteralItems = functionCallContext
+            ? buildFunctionLiteralCompletions(functionCallContext, position)
+            : [];
         const normalizedFuncArgText = context.currentArgText.replace(/[\s\}\]\)]+$/g, "");
         const normalizedPartialMatch = normalizedFuncArgText.match(/([A-Za-z_][A-Za-z0-9_.]*)$/);
         const normalizedPartial = normalizedPartialMatch?.[1] ?? "";
@@ -1715,6 +1766,8 @@ function getExternalArgumentCompletions(
             });
         return [
             ...funcApiItems,
+            ...functionArgItems,
+            ...functionLiteralItems,
             ...bracedKeywordItems,
             ...variableItemsForRange(currentArgRange)
         ];

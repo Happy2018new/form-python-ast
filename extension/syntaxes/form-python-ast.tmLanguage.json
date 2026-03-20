@@ -139,6 +139,9 @@
                             "include": "#externalCalls"
                         },
                         {
+                            "include": "#constants"
+                        },
+                        {
                             "name": "storage.type.form-python-ast",
                             "match": "\\b(?:int|bool|float|str)\\b"
                         },
@@ -177,6 +180,12 @@
                             "include": "#externalCalls"
                         },
                         {
+                            "include": "#constants"
+                        },
+                        {
+                            "include": "#typeKeywords"
+                        },
+                        {
                             "name": "entity.name.function.form-python-ast",
                             "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)+\\b"
                         },
@@ -212,6 +221,12 @@
                     "patterns": [
                         {
                             "include": "#externalCalls"
+                        },
+                        {
+                            "include": "#constants"
+                        },
+                        {
+                            "include": "#typeKeywords"
                         },
                         {
                             "name": "keyword.control.external.form-python-ast",

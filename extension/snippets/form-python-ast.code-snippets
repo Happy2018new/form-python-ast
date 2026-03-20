@@ -41,46 +41,46 @@
         ],
         "description": "for ... rof block"
     },
-    "Selector Statement": {
+    "Selector external statement": {
         "prefix": "selector",
         "body": [
             "{selector, '${1:@s}'}"
         ],
-        "description": "Selector statement"
+        "description": "Selector external statement"
     },
-    "Score Statement": {
+    "Score external statement": {
         "prefix": "score",
         "body": [
             "{score, '${1:@s}', '${2:coin}'}"
         ],
-        "description": "Score statement"
+        "description": "Score external statement"
     },
-    "Command Statement": {
+    "Command external statement": {
         "prefix": "command",
         "body": [
             "{command, '${1:say Hello, World!}'}"
         ],
-        "description": "Command statement"
+        "description": "Command external statement"
     },
-    "Ref Statement": {
+    "Ref external statement": {
         "prefix": "ref",
         "body": [
             "{ref, ${1|int,bool,float,str|}, ${2:0}}"
         ],
-        "description": "Ref statement"
+        "description": "Ref external statement"
     },
-    "Func Statement": {
+    "Func external statement": {
         "prefix": "func",
         "body": [
             "{func, ${1:math.sqrt(4)}}"
         ],
-        "description": "Func statement"
+        "description": "Func external statement"
     },
     "Return": {
         "prefix": "return",
         "body": [
             "return ${1:value}"
         ],
-        "description": "return statement"
+        "description": "Return statement"
     }
 }
