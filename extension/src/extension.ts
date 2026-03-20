@@ -492,7 +492,7 @@ function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
 }
 
 function tryExtractLambdaParams(expression: string): string[] | undefined {
-    const lambdaMatch = expression.match(/^lambda\s+([^:]*):/);
+    const lambdaMatch = expression.match(/^lambda\s*([^:]*):/);
     if (!lambdaMatch) {
         return undefined;
     }
@@ -1009,6 +1009,14 @@ function buildFunctionDetailHover(name: string, signature: FunctionSignature): v
     return md;
 }
 
+function buildFunctionFallbackHover(name: string): vscode.MarkdownString {
+    const md = new vscode.MarkdownString();
+    md.appendMarkdown(`### ${name}\n\n`);
+    md.appendMarkdown("**说明**\n\n");
+    md.appendMarkdown(`- ${inferDescriptionFromApiName(name)}\n`);
+    return md;
+}
+
 function shouldShowFunctionHover(word: string): boolean {
     return FUNCTION_SIGNATURES.has(word);
 }
@@ -1081,18 +1089,19 @@ function buildFuncApiCompletions(
     linePrefix: string,
     position: vscode.Position
 ): vscode.CompletionItem[] {
-    const match = linePrefix.match(/\{func,(\s*)([A-Za-z_][A-Za-z0-9_.]*)?$/);
+    const match = linePrefix.match(/\{func,(\s*)([A-Za-z_][A-Za-z0-9_.]*)?(\s*\}?)$/);
     if (!match) {
         return [];
     }
 
     const spacesAfterComma = match[1] ?? "";
     const partial = match[2] ?? "";
+    const trailing = match[3] ?? "";
     const leadingSpace = spacesAfterComma.length > 0 ? "" : " ";
 
     const replaceRange = partial.length > 0
         ? new vscode.Range(
-            new vscode.Position(position.line, position.character - partial.length),
+            new vscode.Position(position.line, position.character - trailing.length - partial.length),
             position
         )
         : undefined;
@@ -1105,14 +1114,16 @@ function buildFuncApiCompletions(
 
         const item = new vscode.CompletionItem(api, vscode.CompletionItemKind.Function);
         item.insertText = leadingSpace + api;
+        const isExactMatch = partial.length > 0 && api === partial;
         if (replaceRange) {
             item.range = replaceRange;
-            item.filterText = `${partial} ${api}`;
+            item.filterText = api;
         }
 
         const signature = FUNCTION_SIGNATURES.get(api);
         item.detail = signature ? signature.label : "Static library API";
-        item.sortText = `0_${api}`;
+        item.sortText = isExactMatch ? `0000_exact_${api}` : `1000_${api}`;
+        item.preselect = isExactMatch;
         if (signature) {
             item.documentation = new vscode.MarkdownString(`函数签名: ${signature.label}`);
         }
@@ -1673,7 +1684,37 @@ function getExternalArgumentCompletions(
             position,
             ["selector", "score", "command", "ref", "func"]
         );
+        const normalizedFuncArgText = context.currentArgText.replace(/[\s\}\]\)]+$/g, "");
+        const normalizedPartialMatch = normalizedFuncArgText.match(/([A-Za-z_][A-Za-z0-9_.]*)$/);
+        const normalizedPartial = normalizedPartialMatch?.[1] ?? "";
+        const partialOffsetInArg = normalizedPartial.length > 0
+            ? context.currentArgText.lastIndexOf(normalizedPartial)
+            : -1;
+        const funcApiReplaceStart = normalizedPartial.length > 0 && partialOffsetInArg >= 0
+            ? context.currentArgStart + partialOffsetInArg
+            : context.currentArgStart;
+        const funcApiReplaceRange = new vscode.Range(
+            new vscode.Position(position.line, funcApiReplaceStart),
+            position
+        );
+
+        const funcApiItems = DISCOVERED_APIS
+            .filter((api) => normalizedPartial.length === 0 || api.startsWith(normalizedPartial))
+            .map((api) => {
+                const item = new vscode.CompletionItem(api, vscode.CompletionItemKind.Function);
+                item.insertText = api;
+                item.detail = FUNCTION_SIGNATURES.get(api)?.label ?? "Function API";
+                const isExactMatch = normalizedPartial.length > 0 && api === normalizedPartial;
+                item.sortText = isExactMatch ? `0000_exact_${api}` : `1000_api_${api}`;
+                item.preselect = isExactMatch;
+                item.range = funcApiReplaceRange;
+                if (normalizedPartial.length > 0) {
+                    item.filterText = api;
+                }
+                return item;
+            });
         return [
+            ...funcApiItems,
             ...bracedKeywordItems,
             ...variableItemsForRange(currentArgRange)
         ];
@@ -2515,9 +2556,13 @@ export function activate(context: vscode.ExtensionContext): void {
                 if (shouldShowFunctionHover(word)) {
                     const signature = FUNCTION_SIGNATURES.get(word);
                     if (!signature) {
-                        return undefined;
+                        return new vscode.Hover(buildFunctionFallbackHover(word), wordRange);
                     }
                     return new vscode.Hover(buildFunctionDetailHover(word, signature), wordRange);
+                }
+
+                if (DISCOVERED_APIS.includes(word)) {
+                    return new vscode.Hover(buildFunctionFallbackHover(word), wordRange);
                 }
             }
 
