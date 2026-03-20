@@ -492,11 +492,68 @@ function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
 }
 
 function tryExtractLambdaParams(expression: string): string[] | undefined {
-    const lambdaMatch = expression.match(/^lambda\s*([^:]*):/);
+    const lambdaMatch = expression.match(/^\s*lambda\s*([^:]*):/);
     if (!lambdaMatch) {
         return undefined;
     }
     return normalizeParamList(lambdaMatch[1]);
+}
+
+function isWrappedBySingleParentheses(expression: string): boolean {
+    const trimmed = expression.trim();
+    if (!trimmed.startsWith("(") || !trimmed.endsWith(")")) {
+        return false;
+    }
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = 0; i < trimmed.length; i++) {
+        const ch = trimmed[i];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch === "\\") {
+                escaped = true;
+                continue;
+            }
+            if (ch === "'") {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (ch === "'") {
+            inString = true;
+            continue;
+        }
+
+        if (ch === "(") {
+            depth += 1;
+            continue;
+        }
+
+        if (ch === ")") {
+            depth -= 1;
+            if (depth === 0 && i < trimmed.length - 1) {
+                return false;
+            }
+        }
+    }
+
+    return depth === 0;
+}
+
+function normalizeMappingExpression(rhs: string): string {
+    let expression = rhs.trim();
+    while (isWrappedBySingleParentheses(expression)) {
+        expression = expression.slice(1, -1).trim();
+    }
+    return expression;
 }
 
 function extractFuncMappings(
@@ -504,17 +561,36 @@ function extractFuncMappings(
     methods: Map<string, MethodInfo>
 ): Map<string, MappingInfo> {
     const result = new Map<string, MappingInfo>();
-    const regex = /^\s*funcs\["([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)"\]\s*=\s*(.+)$/gm;
+    const headerRegex = /^\s*funcs\["([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)"\]\s*=\s*/gm;
+    const entries: Array<{ apiName: string; start: number; rhsStart: number }> = [];
+    for (const match of fileText.matchAll(headerRegex)) {
+        const full = match[0] ?? "";
+        const start = match.index ?? 0;
+        entries.push({
+            apiName: match[1],
+            start,
+            rhsStart: start + full.length
+        });
+    }
 
-    for (const match of fileText.matchAll(regex)) {
-        const apiName = match[1];
-        const rhs = match[2].trim();
+    for (let i = 0; i < entries.length; i++) {
+        const current = entries[i];
+        const next = entries[i + 1];
+        const rhsEnd = next ? next.start : fileText.length;
+        const rhsRaw = fileText.slice(current.rhsStart, rhsEnd);
+        const beforeBuildLoop = rhsRaw.split(/\n(?=\s*for\s+key,\s*value\s+in\s+funcs\.items\(\)\s*:)/)[0] ?? rhsRaw;
+        const rhs = normalizeMappingExpression(beforeBuildLoop);
+        const apiName = current.apiName;
+        if (!rhs) {
+            continue;
+        }
 
         const lambdaParams = tryExtractLambdaParams(rhs);
         if (lambdaParams) {
             result.set(apiName, {
                 params: lambdaParams,
-                rhs
+                rhs,
+                description: inferDescriptionFromRhs(apiName, rhs)
             });
             continue;
         }
@@ -952,10 +1028,64 @@ function buildFunctionLiteralCompletions(
         .map((name) => {
             const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Keyword);
             item.insertText = name;
-            item.detail = "Boolean literal";
             item.sortText = `050_literal_${name}`;
             item.range = replaceRange;
             item.filterText = name;
+            return item;
+        });
+}
+
+function buildFunctionTypeCompletions(
+    context: { argumentPrefix: string },
+    position: vscode.Position
+): vscode.CompletionItem[] {
+    const currentArgText = extractCurrentTopLevelArgument(context.argumentPrefix);
+    const typedMatch = currentArgText.match(/([A-Za-z_]*)$/);
+    const typed = typedMatch?.[1] ?? "";
+    const replaceRange = new vscode.Range(
+        new vscode.Position(position.line, position.character - typed.length),
+        position
+    );
+
+    const types = ["int", "bool", "float", "str"];
+    return types
+        .filter((name) => name.startsWith(typed))
+        .map((name) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Keyword);
+            item.insertText = name;
+            item.sortText = `060_type_${name}`;
+            item.range = replaceRange;
+            item.filterText = name;
+            return item;
+        });
+}
+
+function buildFunctionArgumentVariableCompletions(
+    document: vscode.TextDocument,
+    context: { argumentPrefix: string },
+    position: vscode.Position
+): vscode.CompletionItem[] {
+    const currentArgText = extractCurrentTopLevelArgument(context.argumentPrefix);
+    const typedMatch = currentArgText.match(/([A-Za-z_][A-Za-z0-9_]*)$/);
+    const typed = typedMatch?.[1] ?? "";
+    const replaceRange = typed.length > 0
+        ? new vscode.Range(
+            new vscode.Position(position.line, position.character - typed.length),
+            position
+        )
+        : undefined;
+
+    return extractVariableNames(document)
+        .filter((name) => typed.length === 0 || name.startsWith(typed))
+        .map((name) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Variable);
+            item.insertText = name;
+            item.detail = "Variable";
+            item.sortText = `150_arg_var_${name}`;
+            if (replaceRange) {
+                item.range = replaceRange;
+                item.filterText = name;
+            }
             return item;
         });
 }
@@ -1406,6 +1536,19 @@ function booleanLiteralItemsForRange(
     });
 }
 
+function typeKeywordItemsForRange(
+    leadingSpace: string,
+    replaceRange: vscode.Range
+): vscode.CompletionItem[] {
+    return ["int", "bool", "float", "str"].map((name) => {
+        const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Keyword);
+        item.insertText = leadingSpace + name;
+        item.range = replaceRange;
+        item.sortText = `2_type_${name}`;
+        return item;
+    });
+}
+
 function buildBracedExternalKeywordItems(
     _document: vscode.TextDocument,
     currentArgText: string,
@@ -1599,12 +1742,11 @@ function getExternalArgumentCompletions(
     );
     const refTypePartialMatch = context.currentArgText.match(/([A-Za-z_]*)$/);
     const refTypePartial = refTypePartialMatch?.[1] ?? "";
-    const contextArgumentDetail = `${context.kind.charAt(0).toUpperCase()}${context.kind.slice(1)} statement argument`;
 
     const names = extractVariableNames(document);
     const variableItemsForRange = (replaceRange?: vscode.Range): vscode.CompletionItem[] => {
         return names.map((name) => {
-            const item = externalArgValueItem(name, contextArgumentDetail, replaceRange);
+            const item = externalArgValueItem(name, "Variable", replaceRange);
             item.insertText = leadingSpace + name;
             item.sortText = `1_${name}`;
             return item;
@@ -1621,6 +1763,7 @@ function getExternalArgumentCompletions(
         return [
             ...bracedKeywordItems,
             ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
+            ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
             externalArgItem(
                 "commandLine",
                 leadingSpace + "'${1:say Hello, World!}'",
@@ -1641,6 +1784,7 @@ function getExternalArgumentCompletions(
         return [
             ...bracedKeywordItems,
             ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
+            ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
             externalArgItem(
                 "target",
                 leadingSpace + "'${1:@s}'",
@@ -1663,6 +1807,7 @@ function getExternalArgumentCompletions(
             return [
                 ...bracedKeywordItems,
                 ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
+                ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem(
                     "player",
                     leadingSpace + "'${1:@s}'",
@@ -1682,6 +1827,7 @@ function getExternalArgumentCompletions(
             return [
                 ...bracedKeywordItems,
                 ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
+                ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem(
                     "scoreboard",
                     leadingSpace + "'${1:coin}'",
@@ -1715,6 +1861,7 @@ function getExternalArgumentCompletions(
             return [
                 ...bracedKeywordItems,
                 ...booleanLiteralItemsForRange(leadingSpace, currentArgRange),
+                ...typeKeywordItemsForRange(leadingSpace, currentArgRange),
                 externalArgItem("index", leadingSpace + "${1:0}", "Ref statement argument"),
                 ...variableItemsForRange(currentArgRange)
             ];
@@ -1729,11 +1876,14 @@ function getExternalArgumentCompletions(
             ["selector", "score", "command", "ref", "func"]
         );
         const functionCallContext = getFunctionCallContext(document, position);
-        const functionArgItems = functionCallContext
-            ? buildFunctionArgumentCompletions(functionCallContext, position)
+        const functionArgVariableItems = functionCallContext
+            ? buildFunctionArgumentVariableCompletions(document, functionCallContext, position)
             : [];
         const functionLiteralItems = functionCallContext
             ? buildFunctionLiteralCompletions(functionCallContext, position)
+            : [];
+        const functionTypeItems = functionCallContext
+            ? buildFunctionTypeCompletions(functionCallContext, position)
             : [];
         const normalizedFuncArgText = context.currentArgText.replace(/[\s\}\]\)]+$/g, "");
         const normalizedPartialMatch = normalizedFuncArgText.match(/([A-Za-z_][A-Za-z0-9_.]*)$/);
@@ -1749,25 +1899,28 @@ function getExternalArgumentCompletions(
             position
         );
 
-        const funcApiItems = DISCOVERED_APIS
-            .filter((api) => normalizedPartial.length === 0 || api.startsWith(normalizedPartial))
-            .map((api) => {
-                const item = new vscode.CompletionItem(api, vscode.CompletionItemKind.Function);
-                item.insertText = api;
-                item.detail = FUNCTION_SIGNATURES.get(api)?.label ?? "Function API";
-                const isExactMatch = normalizedPartial.length > 0 && api === normalizedPartial;
-                item.sortText = isExactMatch ? `0000_exact_${api}` : `1000_api_${api}`;
-                item.preselect = isExactMatch;
-                item.range = funcApiReplaceRange;
-                if (normalizedPartial.length > 0) {
-                    item.filterText = api;
-                }
-                return item;
-            });
+        const funcApiItems = functionCallContext
+            ? []
+            : DISCOVERED_APIS
+                .filter((api) => normalizedPartial.length === 0 || api.startsWith(normalizedPartial))
+                .map((api) => {
+                    const item = new vscode.CompletionItem(api, vscode.CompletionItemKind.Function);
+                    item.insertText = api;
+                    item.detail = FUNCTION_SIGNATURES.get(api)?.label ?? "Function API";
+                    const isExactMatch = normalizedPartial.length > 0 && api === normalizedPartial;
+                    item.sortText = isExactMatch ? `0000_exact_${api}` : `1000_api_${api}`;
+                    item.preselect = isExactMatch;
+                    item.range = funcApiReplaceRange;
+                    if (normalizedPartial.length > 0) {
+                        item.filterText = api;
+                    }
+                    return item;
+                });
         return [
             ...funcApiItems,
-            ...functionArgItems,
+            ...functionArgVariableItems,
             ...functionLiteralItems,
+            ...functionTypeItems,
             ...bracedKeywordItems,
             ...variableItemsForRange(currentArgRange)
         ];

@@ -2,7 +2,7 @@
     "name": "form-python-ast-language-tools",
     "displayName": "Form Python AST Language Tools",
     "description": "Syntax highlighting and code completion for the custom Form Python AST language.",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "publisher": "Happy2018new",
     "engines": {
         "vscode": "^1.88.0"
