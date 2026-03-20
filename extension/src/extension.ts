@@ -1495,6 +1495,7 @@ function extractVariableNames(document: vscode.TextDocument): string[] {
 
     const names = new Set<string>();
     const assignRegex = /\b([A-Za-z_][A-Za-z0-9_]*)\b(?=\s*=)/g;
+    const forHeaderRegex = /^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s*,\s*([^:]+?)\s*:\s*$/;
     let inBlockComment = false;
 
     for (let line = 0; line < document.lineCount; line++) {
@@ -1506,6 +1507,19 @@ function extractVariableNames(document: vscode.TextDocument): string[] {
             const name = match[1];
             if (!reserved.has(name)) {
                 names.add(name);
+            }
+        }
+
+        const forHeaderMatch = text.match(forHeaderRegex);
+        if (forHeaderMatch) {
+            const indexName = forHeaderMatch[1];
+            if (!reserved.has(indexName)) {
+                names.add(indexName);
+            }
+
+            const countExpr = forHeaderMatch[2].trim();
+            if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(countExpr) && !reserved.has(countExpr)) {
+                names.add(countExpr);
             }
         }
     }
