@@ -2386,6 +2386,12 @@ function formatDocument(
             continue;
         }
 
+        // Keep block-comment text exactly as authored (including inner indentation).
+        if (hasBlockCommentMarker || wasInBlockComment || inBlockComment) {
+            lines.push(raw);
+            continue;
+        }
+
         const token = firstToken(codeOnly);
         const shouldDecreaseBefore = token === "fi" || token === "rof" || token === "elif" || token === "else";
 
