@@ -2793,32 +2793,6 @@ export function activate(context: vscode.ExtensionContext): void {
         selector,
         {
             provideSignatureHelp(document, position) {
-                const forContext = getForHeaderSignatureContext(document, position);
-                if (forContext) {
-                    const help = new vscode.SignatureHelp();
-                    const info = new vscode.SignatureInformation("for index: int, count: int:");
-                    info.parameters = [
-                        new vscode.ParameterInformation("index: int"),
-                        new vscode.ParameterInformation("count: int")
-                    ];
-                    help.signatures = [info];
-                    help.activeSignature = 0;
-                    help.activeParameter = forContext.activeParameter;
-                    return help;
-                }
-
-                const ifElifContext = getIfElifSignatureContext(document, position);
-                if (ifElifContext) {
-                    const help = new vscode.SignatureHelp();
-                    const keyword = ifElifContext.keyword;
-                    const info = new vscode.SignatureInformation(`${keyword} condition: bool:`);
-                    info.parameters = [new vscode.ParameterInformation("condition: bool")];
-                    help.signatures = [info];
-                    help.activeSignature = 0;
-                    help.activeParameter = 0;
-                    return help;
-                }
-
                 const context = getFunctionCallContext(document, position);
                 if (!context) {
                     return undefined;
