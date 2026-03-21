@@ -2254,12 +2254,51 @@ function normalizeFunctionCallExpression(expr: string): string | undefined {
 }
 
 function normalizeOperatorSpacing(text: string): string {
-    let result = text;
-    result = result.replace(/\s*(==|!=|>=|<=|>|<)\s*/g, " $1 ");
-    result = result.replace(/\s*\b(and|or|in)\b\s*/g, " $1 ");
-    result = result.replace(/\s*\bnot\b\s*/g, " not ");
-    result = result.replace(/[ \t]{2,}/g, " ");
-    return result.trim();
+    const normalizeCodeSegment = (segment: string): string => {
+        let result = segment;
+        result = result.replace(/\s*(==|!=|>=|<=|>|<)\s*/g, " $1 ");
+        result = result.replace(/\s*\b(and|or|in)\b\s*/g, " $1 ");
+        result = result.replace(/\s*\bnot\b\s*/g, " not ");
+        result = result.replace(/[ \t]{2,}/g, " ");
+        return result;
+    };
+
+    let output = "";
+    let codeBuffer = "";
+    let inString = false;
+    let escaped = false;
+
+    for (const ch of text) {
+        if (inString) {
+            output += ch;
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch === "\\") {
+                escaped = true;
+                continue;
+            }
+            if (ch === "'") {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (ch === "'") {
+            output += normalizeCodeSegment(codeBuffer);
+            codeBuffer = "";
+            output += ch;
+            inString = true;
+            escaped = false;
+            continue;
+        }
+
+        codeBuffer += ch;
+    }
+
+    output += normalizeCodeSegment(codeBuffer);
+    return output.trim();
 }
 
 function isSingleQuotedLiteral(text: string): boolean {
