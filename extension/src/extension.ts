@@ -80,7 +80,7 @@ function createSignature(
 
 function normalizeParamList(raw: string): string[] {
     const cleaned = raw
-        .replace(/#.*$/g, "")
+        .replace(/#[^\n\r]*/g, "")
         .replace(/\/\*.*?\*\//g, "")
         .trim();
 
@@ -245,6 +245,16 @@ function cleanDocText(text: string): string {
     }
 
     return compact.slice(0, 160).trim();
+}
+
+function findEnclosingClassName(fileText: string, position: number): string | undefined {
+    const head = fileText.slice(0, Math.max(0, position));
+    const classRegex = /^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)\s*[:(]/gm;
+    let current: string | undefined;
+    for (const match of head.matchAll(classRegex)) {
+        current = match[1];
+    }
+    return current;
 }
 
 function humanizeName(name: string): string {
@@ -494,12 +504,17 @@ function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
         });
 
         const returnType = typeInfo?.returnType ?? docTypeInfo?.returnType;
-
-        result.set(methodName, {
+        const className = findEnclosingClassName(fileText, match.index ?? 0);
+        const methodInfo: MethodInfo = {
             params: mergedParams,
             description,
             returnType
-        });
+        };
+
+        result.set(methodName, methodInfo);
+        if (className) {
+            result.set(`${className}.${methodName}`, methodInfo);
+        }
     }
 
     return result;
@@ -612,7 +627,9 @@ function extractFuncMappings(
         const selfMethod = rhs.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
         if (selfMethod) {
             const methodName = selfMethod[1];
-            const info = methods.get(methodName);
+            const className = findEnclosingClassName(fileText, current.start);
+            const classScopedMethod = className ? `${className}.${methodName}` : methodName;
+            const info = methods.get(classScopedMethod) ?? methods.get(methodName);
             if (info) {
                 result.set(apiName, {
                     params: info.params,
