@@ -48,12 +48,14 @@ interface FunctionSignature {
     source: "workspace" | "builtin";
     sourceFile?: string;
     description?: string;
+    descriptionFromSource?: boolean;
     returnType?: string;
 }
 
 interface MappingInfo {
     params: string[];
     description?: string;
+    descriptionFromSource?: boolean;
     returnType?: string;
     rhs?: string;
 }
@@ -66,6 +68,7 @@ function createSignature(
     source: FunctionSignature["source"],
     sourceFile?: string,
     description?: string,
+    descriptionFromSource?: boolean,
     returnType?: string
 ): FunctionSignature {
     return {
@@ -74,6 +77,7 @@ function createSignature(
         source,
         sourceFile,
         description,
+        descriptionFromSource,
         returnType
     };
 }
@@ -99,6 +103,7 @@ function normalizeParamList(raw: string): string[] {
 interface MethodInfo {
     params: string[];
     description?: string;
+    descriptionFromSource?: boolean;
     returnType?: string;
 }
 
@@ -257,218 +262,6 @@ function findEnclosingClassName(fileText: string, position: number): string | un
     return current;
 }
 
-function humanizeName(name: string): string {
-    return name.replace(/_/g, " ");
-}
-
-function getSpecificApiDescription(apiName: string): string | undefined {
-    const exact = new Map<string, string>([
-        ["math.sqrt", "返回 x 的平方根。"],
-        ["math.trunc", "返回 x 的截断整数部分。"],
-        ["math.sin", "返回 x 的正弦值（弧度）。"],
-        ["math.cos", "返回 x 的余弦值（弧度）。"],
-        ["math.tan", "返回 x 的正切值（弧度）。"],
-        ["math.pow", "返回 x 的 y 次幂。"],
-        ["math.powmod", "返回 (x ** y) % mod 的结果。"],
-        ["math.log", "返回对数值，可指定底数。"],
-        ["math.log10", "返回以 10 为底的对数。"],
-        ["math.factorial", "返回 x 的阶乘。"],
-        ["math.ceil", "返回不小于 x 的最小整数。"],
-        ["math.floor", "返回不大于 x 的最大整数。"],
-        ["math.round", "按指定位数对数值进行四舍五入。"],
-        ["json.dumps", "将对象序列化为 JSON 字符串。"],
-        ["json.loads", "将 JSON 字符串反序列化为对象。"],
-        ["json.fast_dumps", "快速将对象序列化为 JSON 字符串。"],
-        ["json.fast_loads", "快速将 JSON 字符串反序列化为对象。"],
-        ["uuid.new", "创建并返回新的 UUID 对象引用。"],
-        ["uuid.string", "返回 UUID 的字符串表示。"],
-        ["uuid.hex", "返回 UUID 的十六进制字符串。"],
-        ["time.time", "返回当前 Unix 时间戳（秒）。"],
-        ["time.strftime", "按格式字符串格式化时间。"],
-        ["time.strptime", "按格式将字符串解析为时间结构。"],
-        ["strings.upper", "将字符串转换为大写。"],
-        ["strings.lower", "将字符串转换为小写。"],
-        ["strings.split", "按分隔符拆分字符串。"],
-        ["strings.replace", "替换字符串中的子串并返回新字符串。"],
-        ["strings.strip", "移除字符串两端空白字符。"],
-        ["strings.find", "返回子串首次出现的位置，未找到返回 -1。"],
-        ["strings.startswith", "判断字符串是否以指定前缀开头。"],
-        ["strings.endswith", "判断字符串是否以指定后缀结尾。"],
-        ["maps.keys", "返回映射中所有键的集合/序列引用。"],
-        ["maps.values", "返回映射中所有值的集合/序列引用。"],
-        ["maps.items", "返回映射中所有键值对的集合/序列引用。"],
-        ["slices.sort", "对序列进行排序。"],
-        ["slices.reverse", "反转序列元素顺序。"],
-        ["slices.binsearch", "在有序序列中执行二分查找。"],
-        ["object.ref", "为对象创建并返回托管引用。"],
-        ["object.deref", "解引用指针并返回原始对象。"],
-        ["object.release", "释放对象引用。"],
-        ["object.is_ptr", "判断给定值是否为有效指针引用。"],
-        ["object.is_none", "判断引用是否指向 None。"],
-        ["reflect.call", "调用函数引用并返回结果。"],
-        ["reflect.getattr", "读取对象属性并返回其值。"],
-        ["reflect.setattr", "设置对象属性值。"],
-        ["reflect.delattr", "删除对象属性。"],
-        ["reflect.deepcopy", "深拷贝对象并返回新引用。"]
-    ]);
-    if (exact.has(apiName)) {
-        return exact.get(apiName);
-    }
-
-    const [moduleName, fn = apiName] = apiName.split(".");
-    const suffixRules: Array<[RegExp, string]> = [
-        [/^(add|append|insert|union|concat)$/i, "执行添加/合并操作并返回结果。"],
-        [/^(remove|del|delete|discard|pop|clear)$/i, "执行删除/清空操作并返回结果。"],
-        [/^(greater|less|greater_equal|less_equal|equal|not_equal|exist|ptr_exist|isdisjoint|issubset|issuperset)$/i, "执行比较或关系判断并返回布尔结果。"],
-        [/^(get|ptr_get|at|index|rindex|find|rfind)$/i, "读取并返回目标值或位置。"],
-        [/^(set|ptr_set)$/i, "写入目标值并返回处理结果。"],
-        [/^(length|count)$/i, "返回目标对象的长度。"],
-        [/^(format|isoformat|ctime|asctime)$/i, "将目标值格式化为字符串。"],
-        [/^(encode|decode|b16encode|b16decode|b32encode|b32decode|b64encode|b64decode|hexlify|a2b_hex|b2a_hex|a2b_base64|b2a_base64)$/i, "执行编码/解码转换并返回结果。"],
-        [/^(max|min|sum)$/i, "执行聚合计算并返回结果。"],
-        [/^(new|make|copy|deepcopy|cast)$/i, "创建或转换对象并返回结果。"],
-        [/^(shuffle|sample|choice|randint|randrange|random|uniform|gauss|normalvariate)$/i, "执行随机计算并返回结果。"]
-    ];
-
-    for (const [rule, desc] of suffixRules) {
-        if (rule.test(fn)) {
-            return desc;
-        }
-    }
-
-    if (moduleName === "datetime_date" || moduleName === "datetime_time" || moduleName === "datetime_datetime") {
-        if (/^(year|month|day|hour|minute|second|microsecond|weekday|isoweekday|toordinal)$/i.test(fn)) {
-            return "返回日期时间对象的对应字段值。";
-        }
-    }
-
-    return undefined;
-}
-
-function inferDescriptionFromApiName(apiName: string): string {
-    const specific = getSpecificApiDescription(apiName);
-    if (specific) {
-        return specific;
-    }
-
-    const [moduleName, funcName] = apiName.split(".");
-    const fn = funcName ?? apiName;
-
-    if (["new", "make"].includes(fn)) {
-        return `创建 ${moduleName} 模块中的新对象。`;
-    }
-    if (fn === "cast") {
-        return `将输入值转换为 ${moduleName} 模块期望的数据类型。`;
-    }
-    if (fn === "format") {
-        return `将值格式化为可读字符串。`;
-    }
-    if (fn === "length") {
-        return `返回目标对象的长度。`;
-    }
-    if (["max", "min", "sum"].includes(fn)) {
-        return `执行 ${humanizeName(fn)} 计算并返回结果。`;
-    }
-    if (fn.startsWith("is") || fn.startsWith("has") || fn.startsWith("can")) {
-        return `执行条件判断，返回布尔值结果。`;
-    }
-    if (fn.startsWith("get") || fn.startsWith("ptr_get")) {
-        return `读取并返回目标值。`;
-    }
-    if (fn.startsWith("set") || fn.startsWith("ptr_set")) {
-        return `写入目标值并返回处理结果。`;
-    }
-    if (fn.includes("equal") || fn.includes("less") || fn.includes("greater")) {
-        return `执行比较运算并返回布尔值结果。`;
-    }
-    if (fn.includes("add") || fn.includes("append") || fn.includes("insert")) {
-        return `执行添加操作并返回处理结果。`;
-    }
-    if (fn.includes("remove") || fn.includes("del") || fn.includes("pop") || fn.includes("discard")) {
-        return `执行移除操作并返回处理结果。`;
-    }
-
-    return `调用 ${apiName} 执行对应操作。`;
-}
-
-function inferDescriptionFromRhs(apiName: string, rhs?: string): string {
-    if (!rhs) {
-        return inferDescriptionFromApiName(apiName);
-    }
-
-    const apiNameDescription = inferDescriptionFromApiName(apiName);
-    const hasSpecificDescription = apiNameDescription !== `调用 ${apiName} 执行对应操作。`;
-
-    const lambdaBodyMatch = rhs.match(/^lambda\s+[^:]*:\s*(.+)$/);
-    if (lambdaBodyMatch) {
-        const body = lambdaBodyMatch[1].trim();
-
-        const binaryMatch = body.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*(\+|\-|\*|\/|\/\/|%|\*\*|<<|>>|==|!=|<=|>=|<|>|&|\||\^)\s*([A-Za-z_][A-Za-z0-9_]*)$/);
-        if (binaryMatch) {
-            const opMap: Record<string, string> = {
-                "+": "加法",
-                "-": "减法",
-                "*": "乘法",
-                "/": "除法",
-                "//": "整除",
-                "%": "取模",
-                "**": "幂运算",
-                "<<": "左移",
-                ">>": "右移",
-                "==": "相等比较",
-                "!=": "不等比较",
-                "<=": "小于等于比较",
-                ">=": "大于等于比较",
-                "<": "小于比较",
-                ">": "大于比较",
-                "&": "按位与",
-                "|": "按位或",
-                "^": "按位异或"
-            };
-            return `对 ${binaryMatch[1]} 和 ${binaryMatch[3]} 执行${opMap[binaryMatch[2]] || "运算"}并返回结果。`;
-        }
-
-        const unaryBitNotMatch = body.match(/^~\s*([A-Za-z_][A-Za-z0-9_]*)$/);
-        if (unaryBitNotMatch) {
-            return `对 ${unaryBitNotMatch[1]} 执行按位取反并返回结果。`;
-        }
-
-        const callMatch = body.match(/^([A-Za-z_][A-Za-z0-9_.]*)\((.*)\)$/);
-        if (callMatch) {
-            if (hasSpecificDescription) {
-                return apiNameDescription;
-            }
-            return `调用 ${callMatch[1]} 并返回结果。`;
-        }
-
-        const attrMatch = body.match(/^([A-Za-z_][A-Za-z0-9_.()]+)\.([A-Za-z_][A-Za-z0-9_]*)$/);
-        if (attrMatch) {
-            return `返回 ${attrMatch[1]} 的 ${attrMatch[2]} 属性值。`;
-        }
-
-        if (/^[A-Za-z_][A-Za-z0-9_.]*$/.test(body)) {
-            return `返回 ${body}。`;
-        }
-
-        return `执行表达式 ${body} 并返回结果。`;
-    }
-
-    const selfMatch = rhs.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
-    if (selfMatch) {
-        return `调用内部方法 ${selfMatch[1]} 处理并返回结果。`;
-    }
-
-    if (rhs.includes(" and ") || rhs.includes(" or ")) {
-        return "执行逻辑组合运算并返回布尔值结果。";
-    }
-
-    if (rhs.includes("==") || rhs.includes("!=") || rhs.includes(">") || rhs.includes("<")) {
-        return "执行比较运算并返回布尔值结果。";
-    }
-
-    return apiNameDescription;
-}
-
 function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
     const result = new Map<string, MethodInfo>();
     const regex = /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*:/gm;
@@ -508,6 +301,7 @@ function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
         const methodInfo: MethodInfo = {
             params: mergedParams,
             description,
+            descriptionFromSource: Boolean(description),
             returnType
         };
 
@@ -621,7 +415,7 @@ function extractFuncMappings(
             result.set(apiName, {
                 params: lambdaParams,
                 rhs: rhsForMatch,
-                description: inferDescriptionFromRhs(apiName, rhsForMatch)
+                descriptionFromSource: false
             });
             continue;
         }
@@ -637,6 +431,7 @@ function extractFuncMappings(
                     params: info.params,
                     rhs: rhsForMatch,
                     description: info.description,
+                    descriptionFromSource: info.descriptionFromSource,
                     returnType: info.returnType
                 });
             } else {
@@ -644,7 +439,7 @@ function extractFuncMappings(
                 result.set(apiName, {
                     params: [],
                     rhs: rhsForMatch,
-                    description: inferDescriptionFromRhs(apiName, rhsForMatch)
+                    descriptionFromSource: false
                 });
             }
         }
@@ -677,6 +472,7 @@ async function buildWorkspaceFunctionSignatures(): Promise<Map<string, FunctionS
                         "workspace",
                         sourceFile,
                         info.description,
+                        info.descriptionFromSource,
                         info.returnType
                     )
                 );
@@ -741,6 +537,7 @@ async function buildWorkspaceFunctionSignaturesWithEmbedded(extensionPath: strin
                         "builtin",
                         sourceFile,
                         info.description,
+                        info.descriptionFromSource,
                         info.returnType
                     )
                 );
@@ -1197,19 +994,11 @@ function buildFunctionDetailHover(name: string, signature: FunctionSignature): v
         md.appendMarkdown(`- ${signature.returnType}\n`);
     }
 
-    if (signature.description) {
+    if (signature.description && signature.descriptionFromSource) {
         md.appendMarkdown("\n**说明**\n\n");
         md.appendMarkdown(`${signature.description}\n`);
     }
 
-    return md;
-}
-
-function buildFunctionFallbackHover(name: string): vscode.MarkdownString {
-    const md = new vscode.MarkdownString();
-    md.appendMarkdown(`### ${name}\n\n`);
-    md.appendMarkdown("**说明**\n\n");
-    md.appendMarkdown(`- ${inferDescriptionFromApiName(name)}\n`);
     return md;
 }
 
@@ -2890,13 +2679,13 @@ export function activate(context: vscode.ExtensionContext): void {
                 if (shouldShowFunctionHover(word)) {
                     const signature = FUNCTION_SIGNATURES.get(word);
                     if (!signature) {
-                        return new vscode.Hover(buildFunctionFallbackHover(word), wordRange);
+                        return undefined;
                     }
                     return new vscode.Hover(buildFunctionDetailHover(word, signature), wordRange);
                 }
 
                 if (DISCOVERED_APIS.includes(word)) {
-                    return new vscode.Hover(buildFunctionFallbackHover(word), wordRange);
+                    return undefined;
                 }
             }
 
