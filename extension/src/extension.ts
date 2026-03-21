@@ -1712,13 +1712,20 @@ function getExternalArgumentCompletions(
     }
 
     if (context.kind === "func") {
+        const functionCallContext = getFunctionCallContext(document, position);
+        const activeFuncArgText = functionCallContext
+            ? extractCurrentTopLevelArgument(functionCallContext.argumentPrefix)
+            : context.currentArgText;
+        if (isCursorInsideString(activeFuncArgText)) {
+            return [];
+        }
+
         const bracedKeywordItems = buildBracedExternalKeywordItems(
             document,
             context.currentArgText,
             position,
             ["selector", "score", "command", "ref", "func"]
         );
-        const functionCallContext = getFunctionCallContext(document, position);
         const functionArgVariableItems = functionCallContext
             ? buildFunctionArgumentVariableCompletions(document, functionCallContext, position)
             : [];
