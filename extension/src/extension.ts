@@ -27,6 +27,19 @@ const KEYWORDS = [
 const EXTERNAL_STATEMENTS = ["selector", "score", "command", "ref", "func"];
 const IDENTIFIER_TRIGGER_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".split("");
 
+// Test whether the cursor is currently inside a string literal,
+// which would prevent certain completions from being appropriate.
+function isCursorInsideString(linePrefix: string): boolean {
+    let inString = false;
+    let escaped = false;
+    for (const ch of linePrefix) {
+        if (escaped) { escaped = false; continue; }
+        if (ch === "\\") { escaped = true; continue; }
+        if (ch === "'") { inString = !inString; }
+    }
+    return inString;
+}
+
 let DISCOVERED_APIS: string[] = [];
 
 interface FunctionSignature {
@@ -1735,6 +1748,7 @@ function getExternalArgumentCompletions(
     linePrefix: string,
     position: vscode.Position
 ): vscode.CompletionItem[] {
+    const cursorInString = isCursorInsideString(linePrefix);
     const hasTrailingWhitespace = /\s$/.test(linePrefix);
     const leadingSpace = hasTrailingWhitespace || context.currentArgText.length > 0 ? "" : " ";
     const currentArgRange = new vscode.Range(
@@ -1758,6 +1772,7 @@ function getExternalArgumentCompletions(
 
     const names = extractVariableNames(document);
     const variableItemsForRange = (replaceRange?: vscode.Range): vscode.CompletionItem[] => {
+        if (cursorInString) { return []; }
         return names.map((name) => {
             const item = externalArgValueItem(name, "Variable", replaceRange);
             item.insertText = leadingSpace + name;
@@ -2721,6 +2736,9 @@ export function activate(context: vscode.ExtensionContext): void {
             ): vscode.ProviderResult<vscode.CompletionItem[]> {
                 const linePrefix = document.lineAt(position).text.slice(0, position.character);
                 const inExternal = hasUnclosedBraceContext(linePrefix);
+                if (!inExternal && isCursorInsideString(linePrefix)) {
+                    return [];
+                }
                 const externalArgContext = getExternalArgContext(linePrefix);
                 const inFuncExternal = isInsideFuncExternal(document, position);
                 const funcParenDepth = getCurrentFuncParenDepth(document, position);
