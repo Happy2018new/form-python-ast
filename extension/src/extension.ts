@@ -609,22 +609,24 @@ function extractFuncMappings(
         const rhsRaw = fileText.slice(current.rhsStart, rhsEnd);
         const beforeBuildLoop = rhsRaw.split(/\n(?=\s*for\s+key,\s*value\s+in\s+funcs\.items\(\)\s*:)/)[0] ?? rhsRaw;
         const rhs = normalizeMappingExpression(beforeBuildLoop);
+        const rhsPrimary = rhs.split(/\r?\n/)[0]?.trim() ?? rhs;
+        const rhsForMatch = rhsPrimary.length > 0 ? rhsPrimary : rhs;
         const apiName = current.apiName;
         if (!rhs) {
             continue;
         }
 
-        const lambdaParams = tryExtractLambdaParams(rhs);
+        const lambdaParams = tryExtractLambdaParams(rhsForMatch);
         if (lambdaParams) {
             result.set(apiName, {
                 params: lambdaParams,
-                rhs,
-                description: inferDescriptionFromRhs(apiName, rhs)
+                rhs: rhsForMatch,
+                description: inferDescriptionFromRhs(apiName, rhsForMatch)
             });
             continue;
         }
 
-        const selfMethod = rhs.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
+        const selfMethod = rhsForMatch.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
         if (selfMethod) {
             const methodName = selfMethod[1];
             const className = findEnclosingClassName(fileText, current.start);
@@ -633,9 +635,16 @@ function extractFuncMappings(
             if (info) {
                 result.set(apiName, {
                     params: info.params,
-                    rhs,
+                    rhs: rhsForMatch,
                     description: info.description,
                     returnType: info.returnType
+                });
+            } else {
+                // Keep API discoverable for completion even if method signature extraction failed.
+                result.set(apiName, {
+                    params: [],
+                    rhs: rhsForMatch,
+                    description: inferDescriptionFromRhs(apiName, rhsForMatch)
                 });
             }
         }
