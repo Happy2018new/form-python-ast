@@ -1898,6 +1898,9 @@ function getExternalArgumentCompletions(
         const functionTypeItems = functionCallContext
             ? buildFunctionTypeCompletions(functionCallContext, position)
             : [];
+        const externalVariableItems = functionCallContext
+            ? []
+            : variableItemsForRange(variableReplaceRange);
         const normalizedFuncArgText = context.currentArgText.replace(/[\s\}\]\)]+$/g, "");
         const normalizedPartialMatch = normalizedFuncArgText.match(/([A-Za-z_][A-Za-z0-9_.]*)$/);
         const normalizedPartial = normalizedPartialMatch?.[1] ?? "";
@@ -1935,7 +1938,7 @@ function getExternalArgumentCompletions(
             ...functionLiteralItems,
             ...functionTypeItems,
             ...bracedKeywordItems,
-            ...variableItemsForRange(variableReplaceRange)
+            ...externalVariableItems
         ];
     }
 
