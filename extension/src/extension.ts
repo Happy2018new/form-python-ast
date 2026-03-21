@@ -2245,9 +2245,37 @@ function normalizeOperatorSpacing(text: string): string {
     return result.trim();
 }
 
+function isSingleQuotedLiteral(text: string): boolean {
+    if (text.length < 2 || text[0] !== "'" || text[text.length - 1] !== "'") {
+        return false;
+    }
+
+    let escaped = false;
+    for (let i = 1; i < text.length - 1; i++) {
+        const ch = text[i];
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (ch === "\\") {
+            escaped = true;
+            continue;
+        }
+        if (ch === "'") {
+            return false;
+        }
+    }
+
+    return !escaped;
+}
+
 function normalizeExpression(expr: string): string {
     const trimmed = expr.trim();
     if (trimmed.length === 0) {
+        return trimmed;
+    }
+
+    if (isSingleQuotedLiteral(trimmed)) {
         return trimmed;
     }
 
