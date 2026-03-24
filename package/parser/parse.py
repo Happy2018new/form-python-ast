@@ -1,27 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
-from .define import (
-    ConditionCodeBlock,
-    ForLoopCodeBlock,
-    OpcodeBase,
-    OpcodeAssign,
-    OpcodeCondition,
-    OpcodeForLoop,
-    OpcodeContinue,
-    OpcodeBreak,
-    OpcodeExpression,
-    OpcodeReturn,
-)
-from ..expression.combine import ExpressionCombine
-from ..expression.define import (
+
+from .expression.combine import ExpressionCombine
+from .expression.define import (
     CONTEXT_PARSE_ASSIGN,
     CONTEXT_PARSE_IF,
     CONTEXT_PARSE_FOR,
 )
-from ..reader.string_reader import StringReader
-from ..token.sentence import Sentence, SentenceReader
-from ..token.token import (
+from .reader.string_reader import StringReader
+from .token.sentence import Sentence, SentenceReader
+from .token.token import (
     Token,
     TOKEN_ID_WORD,
     TOKEN_ID_ASSIGN,
@@ -37,6 +26,18 @@ from ..token.token import (
     TOKEN_ID_KEY_WORD_CONTINUE,
     TOKEN_ID_KEY_WORD_BREAK,
     TOKEN_ID_KEY_WORD_ROF,
+)
+from .define import (
+    ConditionCodeBlock,
+    ForLoopCodeBlock,
+    OpcodeBase,
+    OpcodeAssign,
+    OpcodeCondition,
+    OpcodeForLoop,
+    OpcodeContinue,
+    OpcodeBreak,
+    OpcodeExpression,
+    OpcodeReturn,
 )
 
 try:

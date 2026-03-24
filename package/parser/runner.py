@@ -2,21 +2,8 @@
 from __future__ import division
 
 import json
-from .external import GameInteract, BuiltInFunction
-from .define import (
-    ConditionCodeBlock,
-    ForLoopCodeBlock,
-    OpcodeBase,
-    OpcodeAssign,
-    OpcodeCondition,
-    OpcodeForLoop,
-    OpcodeContinue,
-    OpcodeBreak,
-    OpcodeExpression,
-    OpcodeReturn,
-)
-from ..expression.combine import ExpressionCombine
-from ..expression.define import (
+from .expression.combine import ExpressionCombine
+from .expression.define import (
     ExpressionElement,
     TYPE_ENUM_INT,
     TYPE_ENUM_BOOL,
@@ -48,13 +35,26 @@ from ..expression.define import (
     ELEMENT_ID_IN,
     ELEMENT_ID_INVERSE,
 )
-from ..expression.basic import (
+from .expression.basic import (
     ExpressionLiteral,
     ExpressionReference,
     ExpressionSelector,
     ExpressionScore,
     ExpressionCommand,
     ExpressionFunction,
+)
+from .external import GameInteract, BuiltInFunction
+from .define import (
+    ConditionCodeBlock,
+    ForLoopCodeBlock,
+    OpcodeBase,
+    OpcodeAssign,
+    OpcodeCondition,
+    OpcodeForLoop,
+    OpcodeContinue,
+    OpcodeBreak,
+    OpcodeExpression,
+    OpcodeReturn,
 )
 
 try:
