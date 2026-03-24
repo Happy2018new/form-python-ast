@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
-
 from .expression.combine import ExpressionCombine
 from .expression.define import (
     CONTEXT_PARSE_ASSIGN,
