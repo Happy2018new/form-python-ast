@@ -57,10 +57,10 @@ from .compute import (
 )
 from .compare import (
     ExpressionOperator,
-    ExpressionGreaterThan,
     ExpressionLessThan,
-    ExpressionGreaterEqual,
+    ExpressionGreaterThan,
     ExpressionLessEqual,
+    ExpressionGreaterEqual,
     ExpressionEqual,
     ExpressionNotEqual,
     ExpressionAnd,
