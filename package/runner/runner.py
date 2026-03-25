@@ -208,11 +208,15 @@ class CodeRunner:
                         _push(str(_pop()))
                     pc += 2
                 elif op == 13:  # HANDLE_FUNC (13, POP_LEN, FUNC_NAME)
-                    # Calling built-in function
-                    val = builtins.get_func(byte_code[pc + 2])(  # type: ignore
-                        *reversed([_pop() for _ in range(byte_code[pc + 1])])
-                    )
-                    # Type check
+                    # Calling the target function
+                    pop_len = byte_code[pc + 1]
+                    if pop_len > 0:  # type: ignore
+                        args = stack[-pop_len:]  # type: ignore
+                        del stack[-pop_len:]  # type: ignore
+                        val = builtins.get_func(byte_code[pc + 2])(*args)  # type: ignore
+                    else:
+                        val = builtins.get_func(byte_code[pc + 2])()  # type: ignore
+                    # Do type check for the return value
                     if isinstance(val, (int, bool, float, str)):
                         _push(val)
                         pc += 3
