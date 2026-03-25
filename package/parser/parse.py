@@ -568,6 +568,7 @@ class CodeParser:
             OpcodeCondition:
                 解析所得的条件代码块
         """
+        should_end = False
         conditions = [
             ConditionCodeBlock(
                 self._parse_expression(CONTEXT_PARSE_IF, True, False),
@@ -592,6 +593,12 @@ class CodeParser:
                 raise Exception("unreachable")
 
             if further[0].token_id == TOKEN_ID_KEY_WORD_ELIF:
+                if should_end:
+                    self._fast_sentence_panic(
+                        sub_ptr,
+                        self.reader.pointer(),
+                        "Can not use elif statement after else statement in condition code block",
+                    )
                 conditions.append(
                     ConditionCodeBlock(
                         self._parse_expression(CONTEXT_PARSE_IF, True, False),
@@ -600,6 +607,12 @@ class CodeParser:
                     )
                 )
             elif further[0].token_id == TOKEN_ID_KEY_WORD_ELSE:
+                if should_end:
+                    self._fast_sentence_panic(
+                        sub_ptr,
+                        self.reader.pointer(),
+                        "Condition code block only accepts one else statement",
+                    )
                 self._validate_next_token(
                     self.reader.pointer(),
                     TOKEN_ID_COLON,
@@ -610,6 +623,7 @@ class CodeParser:
                         None, self._get_line_code(sub_ptr, self.reader.pointer()), []
                     )
                 )
+                should_end = True
             elif further[0].token_id == TOKEN_ID_KEY_WORD_FI:
                 self._validate_next_line(sub_ptr, True)
                 break

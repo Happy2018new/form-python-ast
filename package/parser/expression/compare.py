@@ -17,13 +17,16 @@ from .define import (
 
 
 class ExpressionOperator(ExpressionElement):
-    """ExpressionOperator 是所有比较运算符的基本实现"""
+    """
+    ExpressionOperator 是所有比较
+    运算符以及计算运算符的基本实现
+    """
 
     element_id = 0  # type: int
     element_payload = []  # type: list[ExpressionElement]
 
     def __init__(self, element_payload=[]):  # type: (list[ExpressionElement]) -> None
-        """初始化并返回一个新的比较运算符
+        """初始化并返回一个新的运算符
 
         Args:
             element_payload (list[ExpressionElement], optional):

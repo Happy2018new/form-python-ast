@@ -1,6 +1,6 @@
 from .parser.parse import CodeParser
-from .parser.external import GameInteract, BuiltInFunction
-from .parser.runner import CodeRunner
+from .runner.external import GameInteract, BuiltInFunction
+from .runner.runner import CodeRunner
 
 """
 Form Python Ast & Package
