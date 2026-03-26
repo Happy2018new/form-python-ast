@@ -417,7 +417,7 @@ class CodeCompiler:
                 self._chk.append(
                     CheckPoint(
                         CHECK_POINT_TYPE_FOR_LOOP,
-                        continue_pc,
+                        start_pc,
                         len(self._ans) - 1,
                         [for_loop.state_line, line_code],
                     )
