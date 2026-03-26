@@ -104,15 +104,37 @@ from ..parser.define import (
 
 
 class ForLoopEnv:
+    """
+    ForLoopEnv 描述了一个循环语句的上下文环境。
+
+    continue_pc 指示在处理到 continue 语句时，
+    程序计数器应跳转的位置。
+
+    end_indexes 储存了所有调用 break 语句的程序计数器位置。
+    因此，当循环体的字节码被编译完成后，可通过重新修改它们，
+    使得虚拟机执行到这些字节码时，可以正确的 break 出循环体。
+
+    在实际设计上，因条件语句只能 continue/break 距离其最近的循环体，
+    并且由于在多层的条件语句嵌套中，它们能操作的循环体也是唯一的，
+    因此该实例可在编译阶段递归传递，因而较深的条件语句也能控制循环体
+    """
+
     continue_pc = 0  # type: int
     end_indexes = []  # type: list[int]
 
     def __init__(self):  # type: () -> None
+        """
+        初始化并返回一个新的 ForLoopEnv
+        """
         self.continue_pc = 0
         self.end_indexes = []
 
 
 class CompileResult:
+    """
+    CompileResult 是编译器将 AST 语法树处理为字节码的结果
+    """
+
     byte_code = []  # type: list[int | bool | float | str]
     check_point = []  # type: list[CheckPoint]
     var_mapping = VariableMapping()  # type: VariableMapping
@@ -123,29 +145,67 @@ class CompileResult:
         check_point,  # type: list[CheckPoint]
         var_mapping,  # type: VariableMapping
     ):  # type: (...) -> None
+        """
+        初始化并返回一个新的 CompileResult
+
+        Args:
+            byte_code (list[int | bool | float | str]):
+                编译器编译所得的字节码序列
+            check_point (list[CheckPoint]):
+                编译器编译过程中产生的检查点序列。
+                应确保该序列已经按源代码行的顺序排序
+            var_mapping (VariableMapping):
+                编译器编译过程中所用的变量映射表
+        """
         self.byte_code = byte_code
         self.check_point = check_point
         self.var_mapping = var_mapping
 
     def __repr__(self):  # type: () -> str
+        """返回 CompileResult 的字符串表示
+
+        Returns:
+            str: 该 CompileResult 的字符串表示
+        """
         return "CompileResult(byte_code={}, check_point={}, var_mapping={})".format(
             self.byte_code, self.check_point, self.var_mapping
         )
 
 
 class CodeCompiler:
+    """
+    CodeCompiler 是将 AST 语法树编译为字节码的编译器
+    """
+
     _ast = []  # type: list[OpcodeBase]
     _ans = []  # type: list[int | bool | float | str]
     _chk = []  # type: list[CheckPoint]
     _map = VariableMapping()  # type: VariableMapping
 
-    def __init__(self, code_block):  # type: (list[OpcodeBase]) -> None
-        self._ast = code_block
+    def __init__(self, code_block=[]):  # type: (list[OpcodeBase]) -> None
+        """初始化并返回一个新的编译器
+
+        Args:
+            code_block (list[OpcodeBase], optional):
+                CodeParser 的编译结果
+                默认值为空列表
+        """
+        self._ast = code_block if len(code_block) > 0 else []
         self._ans = []
         self._chk = []
         self._map = VariableMapping()
 
     def _get_line_code(self, opcode):  # type: (OpcodeBase) -> str | None
+        """_get_line_code 返回 opcode 对应的源代码行
+
+        Args:
+            opcode (OpcodeBase): 目标操作码实例
+
+        Returns:
+            str | None:
+                如果给出的操作码不是条件语句或循环语句，则返回其对应的源代码行；
+                否则给出的操作码是条件语句或循环语句，那么返回 None
+        """
         if isinstance(opcode, OpcodeAssign):
             return opcode.origin_line
         elif isinstance(opcode, OpcodeContinue):
@@ -160,6 +220,14 @@ class CodeCompiler:
             return None
 
     def _handle_literal(self, element):  # type: (ExpressionLiteral) -> None
+        """
+        _handle_literal 将一个字面量表达式元素编译为字节码。
+        可以保证这些字节码执行完成后，栈的顶部是它的求值结果
+
+        Args:
+            element (ExpressionLiteral):
+                待处理的字面量表达式元素
+        """
         if element.element_id == ELEMENT_ID_VAR:
             self._ans.append(BYTECODE_LOAD_VALUE)
             self._ans.append(self._map.index_by_name(element.element_payload))  # type: ignore
@@ -185,6 +253,14 @@ class CodeCompiler:
         self._ans.append(element.element_payload)
 
     def _handle_element(self, element):  # type: (ExpressionElement) -> None
+        """
+        _handle_element 将一个表达式元素编译为对应的字节码。
+        可以保证这些字节码执行完成后，栈的顶部是它的求值结果
+
+        Args:
+            element (ExpressionElement):
+                待处理的表达式元素
+        """
         if isinstance(element, ExpressionLiteral):
             self._handle_literal(element)
         elif isinstance(element, ExpressionCombine):
@@ -320,6 +396,16 @@ class CodeCompiler:
     def _handle_condition(
         self, code_block, for_loop_env
     ):  # type: (OpcodeCondition, ForLoopEnv | None) -> None
+        """
+        _handle_condition 将给出的条件语句编译为字节码
+
+        Args:
+            code_block (OpcodeCondition):
+                要编译为字节码的条件语句
+            for_loop_env (ForLoopEnv | None):
+                该条件语句所在循环语句的上下文环境。
+                若它不位于循环体中，请设置为 None
+        """
         # Jump end for all branches
         jump_end_indexes = []
 
@@ -380,6 +466,13 @@ class CodeCompiler:
             self._ans[index] = end_index
 
     def _handle_for_loop(self, code_block):  # type: (OpcodeForLoop) -> None
+        """
+        _handle_for_loop 将给出的循环语句编译为字节码
+
+        Args:
+            code_block (OpcodeForLoop):
+                要编译为字节码的循环语句
+        """
         # Prepare
         assert code_block.opcode_payload is not None
         for_loop_env = ForLoopEnv()
@@ -434,6 +527,16 @@ class CodeCompiler:
     def _handle_code_block(
         self, code_block, for_loop_env
     ):  # type: (OpcodeBase, ForLoopEnv | None) -> None
+        """
+        _handle_code_block 将给出的代码块编译为字节码
+
+        Args:
+            code_block (OpcodeBase):
+                待处理的代码块
+            for_loop_env (ForLoopEnv | None):
+                该代码块所在循环语句的上下文环境。
+                若它不位于循环体中，请设置为 None
+        """
         if isinstance(code_block, OpcodeAssign):
             self._handle_element(code_block.opcode_payload[1])
             self._ans.append(BYTECODE_STORE_VALUE)
@@ -470,6 +573,12 @@ class CodeCompiler:
             self._ans.append(BYTECODE_PROGRAM_STOP_RUN)
 
     def compile(self):  # type: () -> CompileResult
+        """
+        compile 将 AST 语法树编译为字节码
+
+        Returns:
+            CompileResult: 编译所得结果
+        """
         self._ans = []
         self._chk = []
         self._map = VariableMapping()

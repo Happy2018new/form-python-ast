@@ -267,7 +267,8 @@ def print_func(value):  # type: (...) -> int
 try:
     parser = package.CodeParser(code).parse()
     builtins = package.BuiltInFunction(static={"print": print_func})
-    runner = package.CodeRunner(parser.code_block)
+    compiler = package.CodeCompiler(parser.code_block)
+    runner = package.CodeRunner(compiler.compile())
     print(runner.running(builtins=builtins))
 except Exception as e:
     print(e)

@@ -34,14 +34,37 @@ class InternalException(Exception):
 
 
 class CodeRunner:
+    """
+    CodeRunner 是该编程语言的解释器。
+    它用于运行已经过编译的字节码表示
+    """
+
     _compiled = EMPTY_COMPILE_RESULT  # type: CompileResult
     _vars_len = 0  # type: int
 
     def __init__(self, compiled):  # type: (CompileResult) -> None
+        """初始化并返回一个新的解释器
+
+        Args:
+            compiled (CompileResult):
+                CodeCompiler 的编译结果
+        """
         self._compiled = compiled
         self._vars_len = compiled.var_mapping.variables_count()
 
     def _chk_by_pc(self, pc):  # type: (int) -> CheckPoint
+        """
+        _chk_by_pc 通过给出的程序的计数器，
+        查找它对应的原始代码行（的检查点）
+
+        Args:
+            pc (int):
+                给出的程序计数器
+
+        Returns:
+            CheckPoint:
+                该程序计数器对应的检查点
+        """
         all_start_pc = [cp.start_pc for cp in self._compiled.check_point]
         index = bisect.bisect_right(all_start_pc, pc) - 1
 
@@ -56,6 +79,18 @@ class CodeRunner:
         return CheckPoint(CHECK_POINT_TYPE_NORMAL, 0, 0, [err])
 
     def _fast_panic(self, chk, err):  # type: (CheckPoint, str) -> None
+        """_fast_panic 抛出运行时错误
+
+        Args:
+            chk (CheckPoint):
+                当前程序计数器对应的检查点
+            err (str):
+                需要抛出的错误信息
+
+        Raises:
+            InternalException:
+                err 所指示的错误
+        """
         if chk.point_type == CHECK_POINT_TYPE_NORMAL:
             raise InternalException(
                 "Runtime Error.\n\n- Error -\n  {}\n\n- Code -\n  {}".format(
@@ -86,6 +121,36 @@ class CodeRunner:
         interact=EMPTY_GAME_INTERACT,  # type: GameInteract
         builtins=EMPTY_BUILTIN_FUNCTION,  # type: BuiltInFunction
     ):  # type: (...) -> int | bool | float | str | None
+        """
+        running 通过启动了一个虚拟机，
+        它以解释方式的运行所有代码，
+        并返回它们在运行时的返回值。
+
+        您可以选择预先指定 var_maps 参数，
+        这意味着您将可以预先初始化一些变量。
+
+        给出的 var_maps 在返回前不应修改，
+        但在该函数返回后进行修改是被允许的
+
+        Args:
+            require_return (bool, optional):
+                是否检查这些代码是否返回值。
+                如果为真且没有返回值，则抛出异常。
+                默认值为真
+            var_maps (dict[str, int | bool | float | str], optional):
+                运行代码前已经初始化的变量。
+                默认值为 EMPTY_VARIABLES
+            interact (GameInteract, optional):
+                用于与 Minecraft 进行交互的接口。
+                默认值为 EMPTY_GAME_INTERACT
+            builtins (BuiltInFunction, optional):
+                外部函数提供者为用户定义的内建函数。
+                默认值为 EMPTY_BUILTIN_FUNCTION
+
+        Returns:
+            int | bool | float | str | None:
+                运行代码时所得的返回值
+        """
         pc = 0  # type: int
         stack = []  # type: list[int | bool | float | str]
         result = None  # type: int | bool | float | str | None
