@@ -43,7 +43,7 @@ from .expression.basic import (
     ExpressionCommand,
     ExpressionFunction,
 )
-from .external import GameInteract, BuiltInFunction
+from ..runner.external import GameInteract, BuiltInFunction
 from .define import (
     ConditionCodeBlock,
     ForLoopCodeBlock,
