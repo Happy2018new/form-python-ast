@@ -118,24 +118,3 @@ class CheckPoint:
         return "CheckPoint(point_type={}, start_pc={}, end_pc={}, payload={})".format(
             self.point_type, self.start_pc, self.end_pc, self.payload
         )
-
-
-class CompileResult:
-    byte_code = []  # type: list[int | bool | float | str]
-    check_point = []  # type: list[CheckPoint]
-    var_mapping = VariableMapping()  # type: VariableMapping
-
-    def __init__(
-        self,
-        byte_code,  # type: list[int | bool | float | str]
-        check_point,  # type: list[CheckPoint]
-        var_mapping,  # type: VariableMapping
-    ):  # type: (...) -> None
-        self.byte_code = byte_code
-        self.check_point = check_point
-        self.var_mapping = var_mapping
-
-    def __repr__(self):  # type: () -> str
-        return "CompileResult(byte_code={}, check_point={}, var_mapping={})".format(
-            self.byte_code, self.check_point, self.var_mapping
-        )

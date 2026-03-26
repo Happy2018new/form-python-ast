@@ -51,7 +51,6 @@ from .define import (
     CHECK_POINT_TYPE_FOR_LOOP,
     VariableMapping,
     CheckPoint,
-    CompileResult,
 )
 from ..parser.expression.define import (
     ExpressionElement,
@@ -111,6 +110,27 @@ class ForLoopEnv:
     def __init__(self):  # type: () -> None
         self.continue_pc = 0
         self.end_indexes = []
+
+
+class CompileResult:
+    byte_code = []  # type: list[int | bool | float | str]
+    check_point = []  # type: list[CheckPoint]
+    var_mapping = VariableMapping()  # type: VariableMapping
+
+    def __init__(
+        self,
+        byte_code,  # type: list[int | bool | float | str]
+        check_point,  # type: list[CheckPoint]
+        var_mapping,  # type: VariableMapping
+    ):  # type: (...) -> None
+        self.byte_code = byte_code
+        self.check_point = check_point
+        self.var_mapping = var_mapping
+
+    def __repr__(self):  # type: () -> str
+        return "CompileResult(byte_code={}, check_point={}, var_mapping={})".format(
+            self.byte_code, self.check_point, self.var_mapping
+        )
 
 
 class CodeCompiler:

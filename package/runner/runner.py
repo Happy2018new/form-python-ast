@@ -2,8 +2,16 @@
 from __future__ import division
 
 import json
-from .define import VariableMapping, CompileResult
+import bisect
+from .compile import CompileResult
 from .external import GameInteract, BuiltInFunction
+from .define import (
+    CHECK_POINT_TYPE_NORMAL,
+    CHECK_POINT_TYPE_CONDITION,
+    CHECK_POINT_TYPE_FOR_LOOP,
+    VariableMapping,
+    CheckPoint,
+)
 
 try:
     range = xrange  # type: ignore
@@ -16,6 +24,15 @@ EMPTY_GAME_INTERACT = GameInteract()
 EMPTY_BUILTIN_FUNCTION = BuiltInFunction()
 
 
+class InternalException(Exception):
+    """
+    InternalException 是解释器运行时，其自身抛出的异常。
+    该异常可以与其他异常进行区分，以解决错误格式化问题
+    """
+
+    pass
+
+
 class CodeRunner:
     _compiled = EMPTY_COMPILE_RESULT  # type: CompileResult
     _vars_len = 0  # type: int
@@ -24,10 +41,49 @@ class CodeRunner:
         self._compiled = compiled
         self._vars_len = compiled.var_mapping.variables_count()
 
+    def _chk_by_pc(self, pc):  # type: (int) -> CheckPoint
+        index = bisect.bisect_right(
+            [cp.start_pc for cp in self._compiled.check_point], pc
+        )
+        if index >= 1:
+            chk = self._compiled.check_point[index - 1]
+            if pc <= chk.end_pc:
+                return chk
+        return CheckPoint(
+            CHECK_POINT_TYPE_NORMAL,
+            0,
+            0,
+            ["Unresolved program counter (pc={})".format(pc)],
+        )
+
+    def _fast_panic(self, chk, err):  # type: (CheckPoint, str) -> None
+        if chk.point_type == CHECK_POINT_TYPE_NORMAL:
+            raise InternalException(
+                "Runtime Error.\n\n- Error -\n  {}\n\n- Code -\n  {}".format(
+                    err, chk.payload[0]
+                )
+            )
+        elif chk.point_type == CHECK_POINT_TYPE_CONDITION:
+            prefix = "Runtime Error in Condition.\n\n- Error -\n  {}\n\n- Condition -\n  {}".format(
+                err, chk.payload[0]
+            )
+            if len(chk.payload) > 1:
+                prefix += "\n\n- Code -\n  {}".format(chk.payload[1])
+            raise InternalException(prefix)
+        elif chk.point_type == CHECK_POINT_TYPE_FOR_LOOP:
+            prefix = "Runtime Error in For Loop.\n\n- Error -\n  {}\n\n- For Loop -\n  {}".format(
+                err, chk.payload[0]
+            )
+            if len(chk.payload) > 1:
+                prefix += "\n\n- Code -\n  {}".format(chk.payload[1])
+            raise InternalException(prefix)
+        else:
+            raise Exception("unreachable")
+
     def running(
         self,
         require_return=True,  # type: bool
-        variables=EMPTY_VARIABLES,  # type: dict[str, int | bool | float | str]
+        var_maps=EMPTY_VARIABLES,  # type: dict[str, int | bool | float | str]
         interact=EMPTY_GAME_INTERACT,  # type: GameInteract
         builtins=EMPTY_BUILTIN_FUNCTION,  # type: BuiltInFunction
     ):  # type: (...) -> int | bool | float | str | None
@@ -39,14 +95,14 @@ class CodeRunner:
         _pop = stack.pop
 
         byte_code = self._compiled.byte_code  # type: list[int | bool | float | str]
-        final_var = [
+        variables = [
             None
         ] * self._vars_len  # type: list[int | bool | float | str | None]
 
-        for key, value in variables.items():
+        for key, value in var_maps.items():
             index = self._compiled.var_mapping.index_by_name(key, True)
             if index is not None:
-                final_var[index] = value
+                variables[index] = value
 
         try:
             while True:
@@ -56,7 +112,7 @@ class CodeRunner:
                     _push(byte_code[pc + 1])
                     pc += 2
                 elif op == 1:  # LOAD_VALUE (1, VAR_INDEX)
-                    value = final_var[byte_code[pc + 1]]  # type: ignore
+                    value = variables[byte_code[pc + 1]]  # type: ignore
                     if value is None:
                         raise Exception(
                             "Variable {} used before assignment".format(
@@ -71,11 +127,11 @@ class CodeRunner:
                     _push(value)
                     pc += 2
                 elif op == 2:  # STORE_VALUE (2, VAR_INDEX)
-                    final_var[byte_code[pc + 1]] = _pop()  # type: ignore
+                    variables[byte_code[pc + 1]] = _pop()  # type: ignore
                     pc += 2
                 elif op == 3:  # LOOP_JUMP (3, VAR_INDEX, JUMP_TO)
                     if stack[-1] < stack[-2]:  # type: ignore
-                        final_var[byte_code[pc + 1]] = stack[-1]  # type: ignore
+                        variables[byte_code[pc + 1]] = stack[-1]  # type: ignore
                         stack[-1] += 1  # type: ignore
                         pc += 3
                     else:
@@ -326,7 +382,11 @@ class CodeRunner:
                 elif op == 17:  # INTERNAL_PANIC (17, ERROR)
                     raise Exception(byte_code[pc + 1])
         except Exception as e:
-            raise Exception("pc = {}, err = {}".format(pc, e))
+            if isinstance(e, InternalException):
+                raise e
+            else:
+                self._fast_panic(self._chk_by_pc(pc), str(e))
+                raise Exception("unreachable")
 
         if require_return and result is None:
             raise Exception("Runtime Error: No return value after running the code")
