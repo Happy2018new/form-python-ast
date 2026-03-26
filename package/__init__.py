@@ -1,4 +1,5 @@
 from .parser.parse import CodeParser
+from .runner.compile import CodeCompiler
 from .runner.external import GameInteract, BuiltInFunction
 from .runner.runner import CodeRunner
 
