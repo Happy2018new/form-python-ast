@@ -42,19 +42,18 @@ class CodeRunner:
         self._vars_len = compiled.var_mapping.variables_count()
 
     def _chk_by_pc(self, pc):  # type: (int) -> CheckPoint
-        index = bisect.bisect_right(
-            [cp.start_pc for cp in self._compiled.check_point], pc
-        )
-        if index >= 1:
-            chk = self._compiled.check_point[index - 1]
+        all_start_pc = [cp.start_pc for cp in self._compiled.check_point]
+        index = bisect.bisect_right(all_start_pc, pc) - 1
+
+        if index >= 0:
+            chk = self._compiled.check_point[index]
             if pc <= chk.end_pc:
                 return chk
-        return CheckPoint(
-            CHECK_POINT_TYPE_NORMAL,
-            0,
-            0,
-            ["Unresolved program counter (pc={})".format(pc)],
+
+        err = "Unresolved program counter; pc={}, self._compiled={}".format(
+            pc, self._compiled
         )
+        return CheckPoint(CHECK_POINT_TYPE_NORMAL, 0, 0, [err])
 
     def _fast_panic(self, chk, err):  # type: (CheckPoint, str) -> None
         if chk.point_type == CHECK_POINT_TYPE_NORMAL:
