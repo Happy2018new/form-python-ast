@@ -374,14 +374,7 @@ class CodeRunner:
                     result = _pop()
                     pc += 1
                 elif op == 16:  # PROGRAM_STOP_RUN (16)
-                    if len(stack) == 0:
-                        break
-                    else:
-                        raise Exception(
-                            "fatal error: Stack not empty when try halt the program; pc={}, stack={}, self._compiled={}".format(
-                                pc, stack, self._compiled
-                            )
-                        )
+                    break
                 elif op == 17:  # INTERNAL_PANIC (17, ERROR)
                     raise Exception(byte_code[pc + 1])
         except Exception as e:
