@@ -112,19 +112,16 @@ class CodeRunner:
                     pc += 2
                 elif op == 1:  # LOAD_VALUE (1, VAR_INDEX)
                     value = variables[byte_code[pc + 1]]  # type: ignore
-                    if value is None:
+                    if value is not None:
+                        _push(value)
+                        pc += 2
+                    else:
+                        varname = self._compiled.var_mapping.name_by_index(byte_code[pc + 1])  # type: ignore
                         raise Exception(
                             "Variable {} used before assignment".format(
-                                json.dumps(
-                                    self._compiled.var_mapping.name_by_index(
-                                        byte_code[pc + 1]  # type: ignore
-                                    ),
-                                    ensure_ascii=False,
-                                )
+                                json.dumps(varname, ensure_ascii=False)
                             )
                         )
-                    _push(value)
-                    pc += 2
                 elif op == 2:  # STORE_VALUE (2, VAR_INDEX)
                     variables[byte_code[pc + 1]] = _pop()  # type: ignore
                     pc += 2
@@ -377,7 +374,14 @@ class CodeRunner:
                     result = _pop()
                     pc += 1
                 elif op == 16:  # PROGRAM_STOP_RUN (16)
-                    break
+                    if len(stack) == 0:
+                        break
+                    else:
+                        raise Exception(
+                            "fatal error: Stack not empty when try halt the program; pc={}, stack={}, self._compiled={}".format(
+                                pc, stack, self._compiled
+                            )
+                        )
                 elif op == 17:  # INTERNAL_PANIC (17, ERROR)
                     raise Exception(byte_code[pc + 1])
         except Exception as e:
