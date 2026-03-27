@@ -6,7 +6,7 @@ from .define import (
     BYTECODE_LOAD_VALUE,
     BYTECODE_STORE_VALUE,
     BYTECODE_LOOP_JUMP,
-    BYTECODE_LOOP_POP,
+    BYTECODE_LOOP_CHECK,
     BYTECODE_DIRECT_JUMP,
     BYTECODE_FALSE_JUMP,
     BYTECODE_TRUE_JUMP,
@@ -20,6 +20,8 @@ from .define import (
     BYTECODE_STORE_RETURN_VAL,
     BYTECODE_PROGRAM_STOP_RUN,
     BYTECODE_INTERNAL_PANIC,
+    LOOP_CHECK_TYPE_DATA_TYPE,
+    LOOP_CHECK_TYPE_POP_STACK,
     COMPUTE_TYPE_ADD,
     COMPUTE_TYPE_REMOVE,
     COMPUTE_TYPE_TIMES,
@@ -482,16 +484,10 @@ class CodeCompiler:
         # Handle repeat times
         start_pc = len(self._ans)
         self._handle_element(for_loop.repeat_times)
+        self._ans.append(BYTECODE_LOOP_CHECK)
+        self._ans.append(LOOP_CHECK_TYPE_DATA_TYPE)
         self._ans.append(BYTECODE_LOAD_CONST)
         self._ans.append(0)
-
-        # Handle continue loop or break loop
-        continue_pc = len(self._ans)
-        for_loop_env.continue_pc = continue_pc
-        self._ans.append(BYTECODE_LOOP_JUMP)
-        self._ans.append(varindex)  # type: ignore
-        self._ans.append(0)
-        for_loop_env.end_indexes.append(len(self._ans) - 1)
         self._chk.append(
             CheckPoint(
                 CHECK_POINT_TYPE_FOR_LOOP,
@@ -500,6 +496,14 @@ class CodeCompiler:
                 [for_loop.state_line],
             )
         )
+
+        # Handle continue loop or break loop
+        continue_pc = len(self._ans)
+        for_loop_env.continue_pc = continue_pc
+        self._ans.append(BYTECODE_LOOP_JUMP)
+        self._ans.append(varindex)  # type: ignore
+        self._ans.append(0)
+        for_loop_env.end_indexes.append(len(self._ans) - 1)
 
         # Handle loop body
         for i in for_loop.code_block:
@@ -520,7 +524,8 @@ class CodeCompiler:
 
         # Pop the repeat times and set the pc for all jump end
         end_index = len(self._ans)
-        self._ans.append(BYTECODE_LOOP_POP)
+        self._ans.append(BYTECODE_LOOP_CHECK)
+        self._ans.append(LOOP_CHECK_TYPE_POP_STACK)
         for index in for_loop_env.end_indexes:
             self._ans[index] = end_index
 
