@@ -12,7 +12,7 @@ from .token import (
 )
 
 
-class Sentence(object):
+class Sentence:
     """
     Sentence 是词法分词实现。
     它通过多个 Token 构成了句子

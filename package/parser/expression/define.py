@@ -7,11 +7,6 @@ if TYPE_CHECKING:
 
 import json
 
-try:
-    string_types = (str, unicode)  # type: ignore
-except NameError:
-    string_types = (str,)
-
 CONTEXT_PARSE_ASSIGN = 1 << 0
 CONTEXT_PARSE_IF = 1 << 1
 CONTEXT_PARSE_FOR = 1 << 2
@@ -79,7 +74,7 @@ ELEMENT_ID_TO_NAME = {
 }
 
 
-class ExpressionElement(object):
+class ExpressionElement:
     """ExpressionElement 是任何表达式元素的基本实现"""
 
     element_id = 0  # type: int
@@ -106,7 +101,7 @@ class ExpressionElement(object):
             json.dumps(ELEMENT_ID_TO_NAME[self.element_id], ensure_ascii=False),
         )
         if self.element_payload is not None:
-            if isinstance(self.element_payload, string_types):
+            if isinstance(self.element_payload, str):
                 prefix += ", payload={}".format(
                     json.dumps(self.element_payload, ensure_ascii=False)
                 )

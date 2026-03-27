@@ -58,7 +58,7 @@ CHECK_POINT_TYPE_CONDITION = 1
 CHECK_POINT_TYPE_FOR_LOOP = 2
 
 
-class VariableMapping(object):
+class VariableMapping:
     """
     为了提升性能，在用户代码被实际运行时，
     变量名将被映射为一个整数，因此变量访问将直接通过列表下标进行。
@@ -153,7 +153,7 @@ class VariableMapping(object):
         return self._index_to_name[varindex]
 
 
-class CheckPoint(object):
+class CheckPoint:
     """
     CheckPoint 描述了用户代码中的检查点。
 
