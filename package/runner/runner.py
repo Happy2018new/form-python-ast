@@ -18,6 +18,11 @@ try:
 except Exception:
     pass
 
+try:
+    string_types = (str, unicode)  # type: ignore
+except NameError:
+    string_types = (str,)
+
 EMPTY_COMPILE_RESULT = CompileResult([], [], VariableMapping())
 EMPTY_VARIABLES = {}
 EMPTY_GAME_INTERACT = GameInteract()
@@ -33,7 +38,7 @@ class InternalException(Exception):
     pass
 
 
-class CodeRunner:
+class CodeRunner(object):
     """
     CodeRunner 是该编程语言的解释器。
     它用于运行已经过编译的字节码表示
@@ -334,17 +339,10 @@ class CodeRunner:
                     else:
                         val = builtins.get_func(byte_code[pc + 2])()  # type: ignore
                     # Do type check for the return value
-                    if isinstance(val, (int, bool, float, str)):
+                    if isinstance(val, (int, bool, float) + string_types):
                         _push(val)
                         pc += 3
                         continue
-                    try:
-                        if isinstance(val, unicode):  # type: ignore
-                            _push(str(val))
-                            pc += 3
-                            continue
-                    except Exception:
-                        pass
                     # Raise error if type check failed
                     raise Exception(
                         "The data type of return value from func {} must be int/bool/float/str, but got {}".format(
@@ -357,7 +355,7 @@ class CodeRunner:
                     sub_type = byte_code[pc + 1]
                     if sub_type == 0:  # command
                         command = _pop()
-                        if not isinstance(command, str):
+                        if not isinstance(command, string_types):
                             raise Exception(
                                 'The argument for "command" must be str; value={}'.format(
                                     command
@@ -368,13 +366,13 @@ class CodeRunner:
                     elif sub_type == 1:  # score
                         scoreboard = _pop()
                         target = _pop()
-                        if not isinstance(target, str):
+                        if not isinstance(target, string_types):
                             raise Exception(
                                 'The target argument for "score" must be str; target={}'.format(
                                     target
                                 )
                             )
-                        if not isinstance(scoreboard, str):
+                        if not isinstance(scoreboard, string_types):
                             raise Exception(
                                 'The scoreboard argument for "score" must be str; scoreboard={}'.format(
                                     scoreboard
@@ -384,7 +382,7 @@ class CodeRunner:
                         pc += 2
                     elif sub_type == 2:  # selector
                         value = _pop()
-                        if not isinstance(value, str):
+                        if not isinstance(value, string_types):
                             raise Exception(
                                 'The argument for "selector" must be str; value={}'.format(
                                     value
@@ -426,7 +424,7 @@ class CodeRunner:
                                     )
                                 )
                         elif ref_type == 3:  # str
-                            if not isinstance(value, str):
+                            if not isinstance(value, string_types):
                                 raise Exception(
                                     "Assertion failed: Expect a str but got {}".format(
                                         value

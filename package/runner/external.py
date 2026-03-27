@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 import json
 
 
-class GameInteract:
+class GameInteract(object):
     """
     GameInteract 封装了一系列便捷性函数，方便与游戏进行交互。
     这其中包括解析目标选择器、获取记分板分数，或执行游戏命令等
@@ -228,7 +228,7 @@ class GameInteract:
         return self.ref
 
 
-class BuiltInFunction:
+class BuiltInFunction(object):
     """
     BuiltInFunction 指示外部函数提供者。
 

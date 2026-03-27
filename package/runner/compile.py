@@ -103,7 +103,7 @@ from ..parser.define import (
 )
 
 
-class ForLoopEnv:
+class ForLoopEnv(object):
     """
     ForLoopEnv 描述了一个循环语句的上下文环境。
 
@@ -130,7 +130,7 @@ class ForLoopEnv:
         self.end_indexes = []
 
 
-class CompileResult:
+class CompileResult(object):
     """
     CompileResult 是编译器将 AST 语法树处理为字节码的结果
     """
@@ -172,7 +172,7 @@ class CompileResult:
         )
 
 
-class CodeCompiler:
+class CodeCompiler(object):
     """
     CodeCompiler 是将 AST 语法树编译为字节码的编译器
     """

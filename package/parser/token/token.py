@@ -101,7 +101,7 @@ TOKEN_ID_TO_NAME[TOKEN_ID_WORD] = "word"
 TOKEN_ID_TO_NAME[TOKEN_ID_SEPSEPARATE] = "|"
 
 
-class Token:
+class Token(object):
     """
     Token 是代码中的最小语法单元。它包含了 Token ID 以及相应的负载。
     并且出于调试目的，它还保存了每个 Token 在源代码对应的位置

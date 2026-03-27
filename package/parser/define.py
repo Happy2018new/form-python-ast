@@ -29,7 +29,7 @@ OPCODE_ID_TO_NAME = {
 DEFAULT_EMPTY_EXPRESSION = ExpressionCombine()
 
 
-class ConditionCodeBlock:
+class ConditionCodeBlock(object):
     """
     ConditionCodeBlock 指示条件代码块。
 
@@ -80,7 +80,7 @@ class ConditionCodeBlock:
         )
 
 
-class ForLoopCodeBlock:
+class ForLoopCodeBlock(object):
     """
     ForLoopCodeBlock 指示循环代码块。
     它包含了循环次数及每次循环所执行的代码块。
@@ -129,7 +129,7 @@ class ForLoopCodeBlock:
         )
 
 
-class OpcodeBase:
+class OpcodeBase(object):
     """OpcodeBase 是所有操作码的基本实现"""
 
     opcode_id = 0  # type: int

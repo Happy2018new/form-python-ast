@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-class AnyReader:
+class AnyReader(object):
     """
     AnyReader 是通用的流式阅读器。
     其底层实现是由列表和指针构成的

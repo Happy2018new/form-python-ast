@@ -48,7 +48,7 @@ ORD_ZERO, ORD_NINE = ord("0"), ord("9")
 DEFAULT_EMPTY_EXCEPTION = Exception()
 
 
-class CodeParser:
+class CodeParser(object):
     """
     CodeParser 是源代码解析器。
     它用于解析并编译给定的源代码，

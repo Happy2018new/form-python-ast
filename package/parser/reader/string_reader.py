@@ -2,7 +2,7 @@
 from __future__ import division
 
 
-class StringReader:
+class StringReader(object):
     """StringReader 是字符串流式阅读器"""
 
     _buffer = ""
