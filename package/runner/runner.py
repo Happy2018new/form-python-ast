@@ -340,7 +340,7 @@ class CodeRunner:
                         continue
                     try:
                         if isinstance(val, unicode):  # type: ignore
-                            _push(val)
+                            _push(str(val))
                             pc += 3
                             continue
                     except Exception:
