@@ -18,11 +18,6 @@ try:
 except Exception:
     pass
 
-try:
-    integer_types = (int, long)  # type: ignore
-except NameError:
-    integer_types = (int,)
-
 EMPTY_COMPILE_RESULT = CompileResult([], [], VariableMapping())
 EMPTY_VARIABLES = {}
 EMPTY_GAME_INTERACT = GameInteract()
@@ -206,7 +201,7 @@ class CodeRunner:
                     check_type = byte_code[pc + 1]
                     if check_type == 0:  # DATA_TYPE
                         temp = stack[-1]
-                        if isinstance(temp, bool) or not isinstance(temp, integer_types):
+                        if isinstance(temp, bool) or not isinstance(temp, int):
                             raise Exception("The repeat times of for loop must be int")
                     elif check_type == 1:  # POP_STACK
                         _pop()
