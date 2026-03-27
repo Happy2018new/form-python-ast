@@ -484,14 +484,6 @@ class CodeCompiler:
         self._handle_element(for_loop.repeat_times)
         self._ans.append(BYTECODE_LOAD_CONST)
         self._ans.append(0)
-        self._chk.append(
-            CheckPoint(
-                CHECK_POINT_TYPE_FOR_LOOP,
-                start_pc,
-                len(self._ans) - 1,
-                [for_loop.state_line],
-            )
-        )
 
         # Handle continue loop or break loop
         continue_pc = len(self._ans)
@@ -500,6 +492,14 @@ class CodeCompiler:
         self._ans.append(varindex)  # type: ignore
         self._ans.append(0)
         for_loop_env.end_indexes.append(len(self._ans) - 1)
+        self._chk.append(
+            CheckPoint(
+                CHECK_POINT_TYPE_FOR_LOOP,
+                start_pc,
+                len(self._ans) - 1,
+                [for_loop.state_line],
+            )
+        )
 
         # Handle loop body
         for i in for_loop.code_block:
