@@ -38,11 +38,13 @@ from ...formal.popup import PopupForm as PopupFormalForm
 from ...formal.modal import ModalForm as ModalFormalForm
 from ...packet.option import OptionString, OptionInt
 from ...packet.packet import (
+    PACKET_NAME_UPDATE_FORM_STYLE,
     PACKET_NAME_MODAL_FORM_REQUEST,
     PACKET_NAME_CLIENT_BOUND_CLOSE_FORM,
     MODAL_FORM_CANCEL_REASON_USER_CLOSED,
     MODAL_FORM_CANCEL_REASON_USER_BUSY,
     MODAL_FORM_CANCEL_REASON_EXIT_GAME,
+    UpdateFormStyle,
     ModalFormRequest,
     ModalFormResponse,
     ClientBoundCloseForm,
@@ -141,6 +143,34 @@ class FormFeature:
         with self.executor.get_locker():
             _ = self.executor.set_ref_func(self._ref.ref)
             _ = self.executor.inject_func(funcs)
+
+    def request_update_form_style(
+        self, players, form_style
+    ):  # type: (list[str], int) -> FormFeature
+        """
+        request_update_form_style
+        向多个玩家发送表单样式更新请求
+
+        Args:
+            players (list[str]):
+                要更新表单样式的玩家 ID 列表
+            form_style (int):
+                这些玩家要应用的新表单样式
+
+        Returns:
+            FormFeature: 返回 FormFeature 本身
+        """
+        assert self.system is not None
+        assert self._locker is not None
+
+        with self._locker:
+            onlines = set(GetPlayerList())
+            self.system.NotifyToMultiClients(
+                [i for i in players if i in onlines],
+                PACKET_NAME_UPDATE_FORM_STYLE,
+                UpdateFormStyle(form_style).marshal(),
+            )
+            return self
 
     def send_modal_form_request(
         self,
@@ -289,12 +319,7 @@ class FormFeature:
                 disconnect_player(player_id, "破损的数据包 (标记 0)")
                 return self
 
-            # Consume this form
-            del player_forms[pk.form_id]
-            if len(player_forms) == 0:
-                del self._pending[player_id]
-
-            # Handle cancel or submit
+            # Validate response and init callback and respone data
             cancel = pk.cancel_reason.value()
             if cancel is not None:
                 if not internal and cancel == MODAL_FORM_CANCEL_REASON_EXIT_GAME:
@@ -319,6 +344,11 @@ class FormFeature:
                 when_meet_err = formal_with_cb.onsuberr
                 self._ref.response = response
 
+            # Consume this form
+            del player_forms[pk.form_id]
+            if len(player_forms) == 0:
+                del self._pending[player_id]
+
             # Running corresponding codes
             position = GetEngineCompFactory().CreatePos(player_id).GetFootPos()
             dimension = (
@@ -340,7 +370,7 @@ class FormFeature:
                             executor=player_id,
                             dimension=dimension,
                             position=position,
-                            variables={"error": str(e)},
+                            var_maps={"error": str(e)},
                             require_return=False,
                         )
                     except Exception:
