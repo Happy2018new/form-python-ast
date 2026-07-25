@@ -384,7 +384,48 @@ function extractFuncMappings(
     methods: Map<string, MethodInfo>
 ): Map<string, MappingInfo> {
     const result = new Map<string, MappingInfo>();
-    const headerRegex = /^\s*funcs\["([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)"\]\s*=\s*/gm;
+    const applyMapping = (apiName: string, rhsForMatch: string, start: number): void => {
+        if (!rhsForMatch) {
+            return;
+        }
+
+        const lambdaParams = tryExtractLambdaParams(rhsForMatch);
+        if (lambdaParams) {
+            result.set(apiName, {
+                params: lambdaParams,
+                rhs: rhsForMatch,
+                descriptionFromSource: false
+            });
+            return;
+        }
+
+        const selfMethod = rhsForMatch.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
+        if (selfMethod) {
+            const methodName = selfMethod[1];
+            const className = findEnclosingClassName(fileText, start);
+            const classScopedMethod = className ? `${className}.${methodName}` : methodName;
+            const info = methods.get(classScopedMethod) ?? methods.get(methodName);
+            if (info) {
+                result.set(apiName, {
+                    params: info.params,
+                    rhs: rhsForMatch,
+                    description: info.description,
+                    descriptionFromSource: info.descriptionFromSource,
+                    returnType: info.returnType
+                });
+                return;
+            }
+        }
+
+        // Keep API discoverable for completion even if signature extraction failed.
+        result.set(apiName, {
+            params: [],
+            rhs: rhsForMatch,
+            descriptionFromSource: false
+        });
+    };
+
+    const headerRegex = /^\s*funcs\["([A-Za-z_][A-Za-z0-9_.]*)"\]\s*=\s*/gm;
     const entries: Array<{ apiName: string; start: number; rhsStart: number }> = [];
     for (const match of fileText.matchAll(headerRegex)) {
         const full = match[0] ?? "";
@@ -405,44 +446,26 @@ function extractFuncMappings(
         const rhs = normalizeMappingExpression(beforeBuildLoop);
         const rhsPrimary = rhs.split(/\r?\n/)[0]?.trim() ?? rhs;
         const rhsForMatch = rhsPrimary.length > 0 ? rhsPrimary : rhs;
-        const apiName = current.apiName;
         if (!rhs) {
             continue;
         }
 
-        const lambdaParams = tryExtractLambdaParams(rhsForMatch);
-        if (lambdaParams) {
-            result.set(apiName, {
-                params: lambdaParams,
-                rhs: rhsForMatch,
-                descriptionFromSource: false
-            });
+        applyMapping(current.apiName, rhsForMatch, current.start);
+    }
+
+    const aliasAssignRegex = /^\s*funcs\["([A-Za-z_][A-Za-z0-9_.]*)"\]\s*,\s*funcs\["([A-Za-z_][A-Za-z0-9_.]*)"\]\s*=\s*\(([\s\S]*?)\)\s*$/gm;
+    for (const match of fileText.matchAll(aliasAssignRegex)) {
+        const firstApi = match[1];
+        const secondApi = match[2];
+        const tupleValuesRaw = match[3] ?? "";
+        const tupleValues = splitTopLevelComma(tupleValuesRaw).map((value) => value.trim()).filter((value) => value.length > 0);
+        if (tupleValues.length < 2) {
             continue;
         }
 
-        const selfMethod = rhsForMatch.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
-        if (selfMethod) {
-            const methodName = selfMethod[1];
-            const className = findEnclosingClassName(fileText, current.start);
-            const classScopedMethod = className ? `${className}.${methodName}` : methodName;
-            const info = methods.get(classScopedMethod) ?? methods.get(methodName);
-            if (info) {
-                result.set(apiName, {
-                    params: info.params,
-                    rhs: rhsForMatch,
-                    description: info.description,
-                    descriptionFromSource: info.descriptionFromSource,
-                    returnType: info.returnType
-                });
-            } else {
-                // Keep API discoverable for completion even if method signature extraction failed.
-                result.set(apiName, {
-                    params: [],
-                    rhs: rhsForMatch,
-                    descriptionFromSource: false
-                });
-            }
-        }
+        const start = match.index ?? 0;
+        applyMapping(firstApi, tupleValues[0], start);
+        applyMapping(secondApi, tupleValues[1], start);
     }
 
     return result;
