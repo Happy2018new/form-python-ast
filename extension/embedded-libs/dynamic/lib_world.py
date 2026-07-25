@@ -3,8 +3,9 @@ from __future__ import division
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Any, Callable
     from mod.server.extraServerApi import ServerSystem
+    from ....executor import GameCodeExecutor
 
 from mod.server.extraServerApi import (
     GetLevelId,
@@ -12,6 +13,8 @@ from mod.server.extraServerApi import (
     GetPlayerList,
     GetEntityLimit,
     SetEntityLimit,
+    GetEngineActor,
+    getEntitiesOrBlockFromRay,
 )
 from ..static.lib_object import BaseManager
 
@@ -23,6 +26,7 @@ class World:
 
     _manager = BaseManager()  # type: BaseManager
     _system = None  # type: ServerSystem | None
+    _callback = None  # type: Callable[[str, dict[str, Any] | tuple], None] | None
 
     def __init__(self, manager, system):  # type: (BaseManager, ServerSystem) -> None
         """初始化并返回一个新的 World
@@ -35,6 +39,7 @@ class World:
         """
         self._manager = manager
         self._system = system
+        self._callback = None
 
     def create_projectile_entity(
         self, spawner_id, entity_identifier, param_ptr=None
@@ -77,10 +82,107 @@ class World:
 
         Returns:
             int:
-                指向消耗毁结果（布尔值）的指针
+                指向消毁结果（布尔值）的指针
         """
         assert self._system is not None
         return self._manager.ref(self._system.DestroyEntity(entity_id))
+
+    def create_engine_entity_by_type_str(
+        self,
+        engine_type_str,
+        pos_ptr,
+        rot_ptr,
+        dimension_id,
+        is_npc=False,
+        is_global=False,
+    ):  # type: (str, int, int, int, bool, bool) -> int
+        """create_engine_entity_by_type_str 创建指定 ID 的实体
+
+        Args:
+            engine_type_str (str):
+                欲创建的实体的 ID
+            pos_ptr (int):
+                目标实体应生成的位置。
+                应是一个指向元组的指针
+            rot_ptr (int):
+                生成的实体所视方向的偏航角和俯仰角。
+                应是一个指向元组的指针
+            dimension_id (int):
+                目标实体应生成的维度 ID
+            is_npc (bool, optional):
+                所生成的实体是否是 NPC。
+                默认值为 False
+            is_global (bool):
+                是否创建为全局实体。
+                默认值为 False
+
+        Returns:
+            int:
+                如果成功，返回一个指向字符串的指针，代表该实体的 ID；
+                否则失败，那么返回一个指向 None 的指针
+        """
+        assert self._system is not None
+        return self._manager.ref(
+            self._system.CreateEngineEntityByTypeStr(
+                engine_type_str,
+                self._manager.deref(pos_ptr),
+                self._manager.deref(rot_ptr),
+                dimension_id,
+                is_npc,
+                is_global,
+            )
+        )
+
+    def create_entity_aoi(self, dimension, name, aabb_ptr, func_name):
+        """
+        create_entity_aoi 注册一个感应区域，
+        当有实体进入时和离开时会触发回调函数
+
+        Args:
+            dimension (int):
+                感应区域所在的维度 ID
+            name (str):
+                感应区域的名称
+            aabb_ptr (int):
+                围成感应区域的长方体。
+                应是一个指向元组的指针
+            func_name (str):
+                欲触发的回调函数的名称
+        """
+
+        def callback(args):
+            assert self._callback is not None
+            try:
+                self._callback(func_name, args)
+            except Exception:
+                pass
+
+        return self._manager.ref(
+            GetEngineCompFactory()
+            .CreateDimension(GetLevelId())
+            .CreateEntityAOI(
+                dimension,
+                name,
+                self._manager.deref(aabb_ptr),
+                lambda args: callback(args),  # type: ignore
+            )
+        )
+
+    def dynamic_register(
+        self, callback, executor
+    ):  # type: (Callable[[str, dict[str, Any] | tuple], None], GameCodeExecutor) -> None
+        """
+        dynamic_register 向底层动态地注册实现，
+        于是依赖库可以调用环路引用上已实现的接口
+
+        Args:
+            callback (Callable[[str, dict[str, Any] | tuple], None]):
+                用于回调执行自定义函数的实现
+            executor (GameCodeExecutor):
+                用户代码的执行器
+        """
+        self._callback = callback
+        _ = executor
 
     def build_func(
         self,
@@ -114,10 +216,24 @@ class World:
                 )
             )
         )
-        funcs["world.CheckChunkState"] = lambda dimension, pos: self._manager.ref(
+        funcs["world.CheckChunkState"] = lambda dimension, pos_ptr: self._manager.ref(
             GetEngineCompFactory()
             .CreateChunkSource(GetLevelId())
-            .CheckChunkState(dimension, self._manager.deref(pos))
+            .CheckChunkState(dimension, self._manager.deref(pos_ptr))
+        )
+        funcs["world.CreateExplosion"] = (
+            lambda pos_ptr, radius, fire, breaks, source_id, player_id: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateExplosion(GetLevelId())
+                .CreateExplosion(
+                    self._manager.deref(pos_ptr),
+                    radius,
+                    fire,
+                    breaks,
+                    source_id,
+                    player_id,
+                )
+            )
         )
         funcs["world.GetAllAreaKeys"] = lambda: self._manager.ref(
             GetEngineCompFactory().CreateChunkSource(GetLevelId()).GetAllAreaKeys()
@@ -142,6 +258,16 @@ class World:
             .CreateChunkSource(GetLevelId())
             .GetChunkEntites(dimension, self._manager.deref(pos_ptr))
         )
+        funcs["world.GetChunkMaxPos"] = lambda chunk_pos_ptr: self._manager.ref(
+            GetEngineCompFactory()
+            .CreateChunkSource(GetLevelId())
+            .GetChunkMaxPos(self._manager.deref(chunk_pos_ptr))
+        )
+        funcs["world.GetChunkMinPos"] = lambda chunk_pos_ptr: self._manager.ref(
+            GetEngineCompFactory()
+            .CreateChunkSource(GetLevelId())
+            .GetChunkMinPos(self._manager.deref(chunk_pos_ptr))
+        )
         funcs["world.GetChunkMobNum"] = (
             lambda dimension, chunk_pos_ptr: self._manager.ref(
                 GetEngineCompFactory()
@@ -150,10 +276,10 @@ class World:
             )
         )
         funcs["world.GetEntitiesAround"] = (
-            lambda entity_id, radius, filters: self._manager.ref(
+            lambda entity_id, radius, filters_ptr: self._manager.ref(
                 GetEngineCompFactory()
                 .CreateGame(entity_id)
-                .GetEntitiesAround(entity_id, radius, self._manager.deref(filters))
+                .GetEntitiesAround(entity_id, radius, self._manager.deref(filters_ptr))
             )
         )
         funcs["world.GetEntitiesAroundByType"] = (
@@ -176,6 +302,11 @@ class World:
             )
         )
         funcs["world.GetLevelId"] = lambda: self._manager.ref(GetLevelId())
+        funcs["world.GetLoadedChunks"] = lambda dimension: self._manager.ref(
+            GetEngineCompFactory()
+            .CreateChunkSource(GetLevelId())
+            .GetLoadedChunks(dimension)
+        )
         funcs["world.GetSpawnPosition"] = lambda: self._manager.ref(
             GetEngineCompFactory().CreateGame(GetLevelId()).GetSpawnPosition()
         )
@@ -196,6 +327,18 @@ class World:
                 GetEngineCompFactory()
                 .CreateChunkSource(GetLevelId())
                 .IsSlimeChunk(dimension_id, self._manager.deref(chunk_pos_ptr))
+            )
+        )
+        funcs["world.LocateNeteaseFeatureRule"] = (
+            lambda rule_name, dimension_id, pos_ptr, must_be_in_new_chunk=False: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateFeature(GetLevelId())
+                .LocateNeteaseFeatureRule(
+                    rule_name,
+                    dimension_id,
+                    self._manager.deref(pos_ptr),
+                    must_be_in_new_chunk,
+                )
             )
         )
         funcs["world.LocateStructureFeature"] = (
@@ -228,6 +371,11 @@ class World:
                 )
             )
         )
+        funcs["world.MirrorDimension"] = lambda from_id, to_id: self._manager.ref(
+            GetEngineCompFactory()
+            .CreateDimension(GetLevelId())
+            .MirrorDimension(from_id, to_id)
+        )
         funcs["world.PlaceFeature"] = (
             lambda feature_name, dimension_id, pos_ptr: self._manager.ref(
                 GetEngineCompFactory()
@@ -235,11 +383,69 @@ class World:
                 .PlaceFeature(feature_name, dimension_id, self._manager.deref(pos_ptr))
             )
         )
+        funcs["world.PlaceNeteaseLargeFeature"] = (
+            lambda pool_name, dimension_id, pos_ptr, rotation, max_depth: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateGame(GetLevelId())
+                .PlaceNeteaseLargeFeature(
+                    pool_name,
+                    dimension_id,
+                    self._manager.deref(pos_ptr),
+                    rotation,
+                    max_depth,
+                )
+            )
+        )
+        funcs["world.SetBiomeByPos"] = (
+            lambda pos_ptr, biome_name, dim_id: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBiome(GetLevelId())
+                .SetBiomeByPos(self._manager.deref(pos_ptr), biome_name, dim_id)
+            )
+        )
+        funcs["world.SetBiomeByPosList"] = (
+            lambda pos_list_ptr, biome_name, dim_id: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBiome(GetLevelId())
+                .SetBiomeByPosList(
+                    self._manager.deref(pos_list_ptr), biome_name, dim_id
+                )
+            )
+        )
+        funcs["world.SetBiomeByVolume"] = (
+            lambda min_pos_ptr, max_pos_ptr, biome_name, dim_id: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBiome(GetLevelId())
+                .SetBiomeByVolume(
+                    self._manager.deref(min_pos_ptr),
+                    self._manager.deref(max_pos_ptr),
+                    biome_name,
+                    dim_id,
+                )
+            )
+        )
+        funcs["world.SetBiomeInfo"] = (
+            lambda biome_name, snow_accumulation_ptr, temperature, downfall, is_rain: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBiome(GetLevelId())
+                .SetBiomeInfo(
+                    biome_name,
+                    self._manager.deref(snow_accumulation_ptr),
+                    temperature,
+                    downfall,
+                    is_rain,
+                )
+            )
+        )
         funcs["world.SetMergeSpawnItemRadius"] = lambda radius: self._manager.ref(
             GetEngineCompFactory()
             .CreateGame(GetLevelId())
             .SetMergeSpawnItemRadius(radius)
         )
+        funcs["world.CreateEngineEntityByTypeStr"] = (
+            self.create_engine_entity_by_type_str
+        )
+        funcs["world.CreateEntityAOI"] = self.create_entity_aoi
         funcs["world.CreateExperienceOrb"] = (
             lambda entity_id, exp, position_ptr, is_special: self._manager.ref(
                 GetEngineCompFactory()
@@ -248,6 +454,11 @@ class World:
             )
         )
         funcs["world.CreateProjectileEntity"] = self.create_projectile_entity
+        funcs["world.DeleteEntityAOI"] = lambda dimension, name: self._manager.ref(
+            GetEngineCompFactory()
+            .CreateDimension(GetLevelId())
+            .DeleteEntityAOI(dimension, name)
+        )
         funcs["world.DestroyEntity"] = self.destroy_entity
         funcs["world.GetDroppedItem"] = (
             lambda item_entity_id, get_user_data=False: self._manager.ref(
@@ -256,12 +467,50 @@ class World:
                 .GetDroppedItem(item_entity_id, get_user_data)
             )
         )
+        funcs["world.GetEngineActor"] = lambda: self._manager.ref(GetEngineActor())
         funcs["world.GetPlayerList"] = lambda: self._manager.ref(GetPlayerList())
         funcs["world.IsEntityAlive"] = lambda entity_id: self._manager.ref(
             GetEngineCompFactory().CreateGame(GetLevelId()).IsEntityAlive(entity_id)
         )
         funcs["world.KillEntity"] = lambda entity_id: self._manager.ref(
             GetEngineCompFactory().CreateGame(GetLevelId()).KillEntity(entity_id)
+        )
+        funcs["world.SpawnResources"] = (
+            lambda identifier, pos_ptr, aux, probability=1.0, bonus_loot_level=0, dimension_id=-1, allow_randomness=True, spawn_orb=False: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBlockInfo(GetLevelId())
+                .SpawnResources(
+                    identifier,
+                    self._manager.deref(pos_ptr),
+                    aux,
+                    probability,
+                    bonus_loot_level,
+                    dimension_id,
+                    allow_randomness,
+                    spawn_orb,
+                )
+            )
+        )
+        funcs["world.SpawnResourcesSilkTouched"] = (
+            lambda identifier, pos_ptr, aux, dimension_id=-1: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBlockInfo(GetLevelId())
+                .SpawnResourcesSilkTouched(
+                    identifier, self._manager.deref(pos_ptr), aux, dimension_id
+                )
+            )
+        )
+        funcs["world.getEntitiesOrBlockFromRay"] = (
+            lambda dimension_id, pos_ptr, rot_ptr, distance=16, is_through=False, filter_type=1: self._manager.ref(
+                getEntitiesOrBlockFromRay(
+                    dimension_id,
+                    self._manager.deref(pos_ptr),
+                    self._manager.deref(rot_ptr),
+                    distance,
+                    is_through,
+                    filter_type,  # type: ignore
+                )
+            )
         )
         funcs["world.GetBlockClip"] = (
             lambda pos_ptr, dimension_id=-1: self._manager.ref(
@@ -299,6 +548,17 @@ class World:
         funcs["world.GetEntityLimit"] = lambda: self._manager.ref(GetEntityLimit())
         funcs["world.SetEntityLimit"] = lambda num: self._manager.ref(
             SetEntityLimit(num)
+        )
+        funcs["world.RegisterBlockPatterns"] = (
+            lambda pattern_ptr, defines_ptr, result_actor_name: self._manager.ref(
+                GetEngineCompFactory()
+                .CreateBlock(GetLevelId())
+                .RegisterBlockPatterns(
+                    self._manager.deref(pattern_ptr),
+                    self._manager.deref(defines_ptr),
+                    result_actor_name,
+                )
+            )
         )
         funcs["world.IsRaining"] = lambda: self._manager.ref(
             GetEngineCompFactory().CreateWeather(GetLevelId()).IsRaining()
