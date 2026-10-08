@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 
 import copy
 from .lib_object import BaseManager
-from .checker.checker import check_object
 
 
 class Reflect:
@@ -111,36 +110,28 @@ class Reflect:
             return 0
 
     def vars(self, ptr):  # type: (int) -> int
-        """vars 返回对象的属性字典
+        """vars 是已被弃用的特性
 
         Args:
-            ptr (int): 目标对象的指针
+            ptr (int): 任意整数
 
         Returns:
-            int:
-                如果成功，则返回对应映射的指针；
-                否则失败，那么返回 0
+            int: 总是返回 0
         """
-        try:
-            return self._manager.ref(vars(self._manager.deref(ptr)))
-        except Exception:
-            return 0
+        _ = ptr
+        return 0
 
     def dir(self, ptr):  # type: (int) -> int
-        """dir 返回对象的属性列表
+        """dir 是已被弃用的特性
 
         Args:
-            ptr (int): 目标对象的指针
+            ptr (int): 任意整数
 
         Returns:
-            int:
-                如果成功，则返回对应切片的指针；
-                否则失败，那么返回 0
+            int: 总是返回 0
         """
-        try:
-            return self._manager.ref(dir(self._manager.deref(ptr)))
-        except Exception:
-            return 0
+        _ = ptr
+        return 0
 
     def hasattr(self, ptr, attr):  # type: (int, str) -> bool
         """
@@ -159,73 +150,44 @@ class Reflect:
             return False
 
     def getattr(self, ptr, attr):  # type: (int, str) -> int
-        """
-        getattr 获取对象在 attr 上指示的属性。
-        如果 attr 或目标属性是受保护的特性，则将返回 0
+        """getattr 是已被弃用的特性
 
         Args:
-            ptr (int): 目标对象的指针
-            attr (str): 欲获取的属性的名称
+            ptr (int): 任意整数
+            attr (str): 任意字符串
 
         Returns:
-            int:
-                如果成功，则返回该属性对应对象的指针；
-                否则失败，那么返回 0
+            int: 总是返回 0
         """
-        if attr.startswith("_"):
-            return 0
-
-        try:
-            obj = getattr(self._manager.deref(ptr), attr)
-        except Exception:
-            return 0
-        if not check_object(obj):
-            return 0
-
-        return self._manager.ref(obj)
+        _, _ = ptr, attr
+        return 0
 
     def setattr(self, obj_ptr, obj_attr, value_ptr):  # type: (int, str, int) -> bool
-        """
-        setattr 设置对象在 obj_attr 上指示的属性。
-        如果 obj_attr 是受保护的特性，则将返回 False
+        """setattr 是已被弃用的特性
 
         Args:
-            obj_ptr (int): 目标对象的指针
-            obj_attr (str): 欲设置的属性的名称
-            value_ptr (int): 要设置的值的指针
+            obj_ptr (int): 任意整数
+            obj_attr (str): 任意字符串
+            value_ptr (int): 任意整数
 
         Returns:
-            bool: 操作是否成功
+            bool: 总是返回 False
         """
-        if obj_attr.startswith("_"):
-            return False
-        try:
-            setattr(
-                self._manager.deref(obj_ptr), obj_attr, self._manager.deref(value_ptr)
-            )
-            return True
-        except Exception:
-            return False
+        _, _, _ = obj_ptr, obj_attr, value_ptr
+        return False
 
     def delattr(self, ptr, attr):  # type: (int, str) -> bool
-        """
-        delattr 删除对象在 attr 上指示的属性。
-        如果 attr 是受保护的特性，则将返回 False
+        """delattr 是已被弃用的特性
 
         Args:
-            ptr (int): 目标对象的指针
-            attr (str): 欲删除的属性的名称
+            ptr (int): 任意整数
+            attr (str): 任意字符串
 
         Returns:
-            bool: 操作是否成功
+            bool: 总是返回 False
         """
-        if attr.startswith("_"):
-            return False
-        try:
-            delattr(self._manager.deref(ptr), attr)
-            return True
-        except Exception:
-            return False
+        _, _ = ptr, attr
+        return False
 
     def callable(self, ptr):  # type: (int) -> bool
         """callable 检查对象是否是可以调用的
@@ -243,25 +205,18 @@ class Reflect:
 
     def call(self, func_ptr, *arg_ptrs):  # type: (int, Any) -> int | str
         """
-        call 调用 func_ptr 所指向的函数。
-        arg_ptrs 是要传入的参数，
-        所有这些参数都应须是指针
+        call 是已被弃用的特性
 
         Args:
-            func_ptr (int):
-                欲调用的函数的指针
+            func_ptr (int): 任意整数
 
         Returns:
             int | str:
-                如果成功，则返回函数调用后所得对象的指针；
-                否则失败，那么返回错误信息的字符串形式
+                总是返回一个字符串式的错误信息，
+                以指示关于该函数已被弃用的错误
         """
-        func = self._manager.deref(func_ptr)
-        args = [self._manager.deref(i) for i in arg_ptrs]
-        try:
-            return self._manager.ref(func(*args))
-        except Exception as e:
-            return str(e)
+        _, _ = func_ptr, arg_ptrs
+        return "call: Try to call a deprecated function"
 
     def compare_and(self, ptr_a, ptr_b):  # type: (int, int) -> int
         """compare_and 对两个对象进行 and 运算
@@ -836,14 +791,14 @@ class Reflect:
         funcs["reflect.copy"] = self.copy
         funcs["reflect.deepcopy"] = self.deepcopy
         funcs["reflect.format"] = self.format
-        funcs["reflect.vars"] = self.vars
-        funcs["reflect.dir"] = self.dir
-        funcs["reflect.hasattr"] = self.hasattr
-        funcs["reflect.getattr"] = self.getattr
-        funcs["reflect.setattr"] = self.setattr
-        funcs["reflect.delattr"] = self.delattr
+        funcs["reflect.vars"] = self.vars  # Deprecated
+        funcs["reflect.dir"] = self.dir  # Deprecated
+        funcs["reflect.hasattr"] = self.hasattr  # Deprecated
+        funcs["reflect.getattr"] = self.getattr  # Deprecated
+        funcs["reflect.setattr"] = self.setattr  # Deprecated
+        funcs["reflect.delattr"] = self.delattr  # Deprecated
         funcs["reflect.callable"] = self.callable
-        funcs["reflect.call"] = self.call
+        funcs["reflect.call"] = self.call  # Deprecated
         funcs["reflect.and"] = self.compare_and
         funcs["reflect.or"] = self.compare_or
         funcs["reflect.inverse"] = self.compare_inverse
