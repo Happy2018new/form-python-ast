@@ -156,7 +156,7 @@ function parseTypeComment(defText: string): TypeCommentInfo | undefined {
 
     const paramsPart = match[1].trim();
     const returnType = match[2].trim();
-    const paramTypes = paramsPart.length > 0 ? splitTopLevelComma(paramsPart) : [];
+    const paramTypes = paramsPart.length > 0 && paramsPart !== "..." ? splitTopLevelComma(paramsPart) : [];
 
     return {
         paramTypes,
@@ -264,13 +264,15 @@ function findEnclosingClassName(fileText: string, position: number): string | un
 
 function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
     const result = new Map<string, MethodInfo>();
-    const regex = /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*:/gm;
+    const regex = /^[ \t]*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*:/gm;
 
     for (const match of fileText.matchAll(regex)) {
         const methodName = match[1];
         const rawParams = match[2];
         const params = normalizeParamList(rawParams);
-        const defLine = readLineAt(fileText, match.index ?? 0);
+        const bodyStart = match.index! + match[0].length;
+        // Type comments follow the closing colon, including on multiline definitions.
+        const defLine = readLineAt(fileText, bodyStart);
         const typeInfo = parseTypeComment(defLine);
         const typedParams = typeInfo
             ? params.map((param, idx) => attachTypeToParam(param, typeInfo.paramTypes[idx]))
@@ -278,9 +280,10 @@ function extractMethodSignatures(fileText: string): Map<string, MethodInfo> {
 
         let description: string | undefined;
         let docTypeInfo: DocstringTypeInfo | undefined;
-        const bodyStart = match.index! + match[0].length;
-        const bodySlice = fileText.slice(bodyStart, Math.min(fileText.length, bodyStart + 1000));
-        const docMatch = bodySlice.match(/^\s*(?:"""([\s\S]*?)"""|'''([\s\S]*?)''')/m);
+        const bodySlice = fileText.slice(bodyStart);
+        // Read the complete leading docstring, skipping only blank lines and comments.
+        // Searching later statements could borrow documentation from another method.
+        const docMatch = bodySlice.match(/^(?:[ \t]*(?:#[^\r\n]*)?\r?\n)*[ \t]*(?:"""([\s\S]*?)"""|'''([\s\S]*?)''')/);
         if (docMatch) {
             const rawDoc = (docMatch[1] ?? docMatch[2] ?? "").trim();
             docTypeInfo = parseDocstringTypes(rawDoc);
@@ -399,7 +402,7 @@ function extractFuncMappings(
             return;
         }
 
-        const selfMethod = rhsForMatch.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)$/);
+        const selfMethod = rhsForMatch.match(/^self\.([A-Za-z_][A-Za-z0-9_]*)[ \t]*(?:#[^\r\n]*)?$/);
         if (selfMethod) {
             const methodName = selfMethod[1];
             const className = findEnclosingClassName(fileText, start);
