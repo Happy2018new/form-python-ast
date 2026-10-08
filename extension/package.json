@@ -2,7 +2,7 @@
     "name": "form-python-ast-language-tools",
     "displayName": "Form Python AST Language Tools",
     "description": "Syntax highlighting and code completion for the custom Form Python AST language.",
-    "version": "0.0.21",
+    "version": "0.0.22",
     "publisher": "Happy2018new",
     "engines": {
         "vscode": "^1.88.0"
@@ -50,6 +50,7 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
+        "test": "npm run compile && node --test test/*.test.js",
         "watch": "tsc -watch -p ./"
     },
     "devDependencies": {
