@@ -60,11 +60,11 @@ class GameTickTimer:
         """
         assert self._locker is not None
 
+        if ticks < 0:
+            raise Exception("schedule: Can not schedule a delay in the past")
         if ticks == 0:
             callback()
             return
-        if ticks < 0:
-            raise ValueError("schedule: Can not schedule a delay in the past")
 
         with self._locker:
             self._seq += 1
@@ -307,11 +307,14 @@ class Utils:
 
             try:
                 ctx.fast_set(eid, False)
+            except Exception:
+                pass
+            try:
                 self._callback(func_name, args)
             finally:
                 ctx.recover_context(backup)
 
-        self._timer.schedule(delay, lambda: callback())
+        self._timer.schedule(delay, callback)
         return True
 
     def async_run_cmd(self, delay, command):  # type: (int, str) -> bool
@@ -343,11 +346,14 @@ class Utils:
 
             try:
                 ctx.fast_set(eid, False)
+            except Exception:
+                pass
+            try:
                 _ = interact.command_func()(command)
             finally:
                 ctx.recover_context(backup)
 
-        self._timer.schedule(delay, lambda: callback())
+        self._timer.schedule(delay, callback)
         return True
 
     def dynamic_register(
